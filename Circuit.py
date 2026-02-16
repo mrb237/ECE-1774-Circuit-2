@@ -17,4 +17,3 @@ class Circuit:
         if name in self.buses.keys():
             raise ValueError(f"Bus '{name}' already exists.")
         self.buses[name] = Bus(name)
-
