@@ -7,6 +7,9 @@ class Bus:
         self.bus_index = Bus.index_counter
         Bus.index_counter += 1
 
+    def __repr__(self):
+        return f"Bus Nominal Voltage: {self.nominal_kv} Volts"
+
 if __name__ == "__main__":
     bus1 = Bus("Bus1", 20.0)
 
@@ -19,3 +22,5 @@ if __name__ == "__main__":
     print(f"Bus2 name: {bus2.name}")
     print(f"Bus2 Nominal Voltage: {bus2.nominal_kv} Volts")
     print(f"Bus2 Index: {bus2.bus_index}")
+
+    print(bus1)

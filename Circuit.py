@@ -52,9 +52,10 @@ class Circuit:
         return loadobj
 
 if __name__ == "__main__":
+    """"
     #Checking Circuit Class Functionality
     circuit1 = Circuit("Test Circuit")
-    """
+
     print(circuit1.name)
     print(type(circuit1.name))
     #Check Attribute Initialization
@@ -69,7 +70,8 @@ if __name__ == "__main__":
     circuit1.add_bus("Bus2", 230.0)
     print(list(circuit1.buses.keys()))
     print(circuit1.buses["Bus1"].name, circuit1.buses["Bus1"].nominal_kv)
-    
+    print(circuit1.buses["Bus1"])
+
     #Verifying Transformer
     circuit1.add_transformer("T1", "Bus1", "Bus2", 0.01, 0.10)
     print(list(circuit1.transformers.keys()))
