@@ -1,3 +1,7 @@
+import numpy as np
+import pandas
+import pandas as pd
+
 class Transformer:
     def __init__(self, name: str, bus1_name: str, bus2_name, r: float, x: float):
         self.name = name
@@ -6,6 +10,16 @@ class Transformer:
         self.r = r
         self.x = x
 
+        #Storing admittance as an attribute
+        self.Yseries = 1 / (self.r + self.x * 1j)
+    #Method
+    def calc_yprim(self):
+        Yprim = pandas.DataFrame ([[self.Yseries, -self.Yseries],[-self.Yseries, self.Yseries]], columns=[self.bus1_name, self.bus2_name],
+                                  index=[self.bus1_name, self.bus2_name])
+        return Yprim
+
+
 if __name__ == "__main__":
     t1 = Transformer("t1", "bus1","bus2", 0.01, 0.10)
-    print(t1.name, t1.bus1_name, t1.bus2_name, t1.r, t1.x)
+    print(t1.Yseries)
+    print(t1.calc_yprim())
