@@ -14,8 +14,12 @@ class Transformer:
         self.Yseries = 1 / (self.r + self.x * 1j)
     #Method
     def calc_yprim(self):
-        Yprim = pandas.DataFrame ([[self.Yseries, -self.Yseries],[-self.Yseries, self.Yseries]], columns=[self.bus1_name, self.bus2_name],
-                                  index=[self.bus1_name, self.bus2_name])
+
+        colm_index = [self.bus1_name, self.bus2_name]
+        row_index = [self.bus1_name, self.bus2_name]
+
+        Yprim = pandas.DataFrame ([[self.Yseries, -self.Yseries],[-self.Yseries, self.Yseries]],
+                                  columns=[colm_index], index= [row_index])
         return Yprim
 
 
