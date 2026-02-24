@@ -93,7 +93,7 @@ class Circuit:
             self.ybus[i,j] += (Yprim_tl.iloc[0,1])
             self.ybus[j,i] += (Yprim_tl.iloc[1,0])
             self.ybus[j,j] += (Yprim_tl.iloc[1,1])
-
+        #Converting an array to a Dataframe matrix
         self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
 
 
