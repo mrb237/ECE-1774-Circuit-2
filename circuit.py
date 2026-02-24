@@ -94,13 +94,15 @@ class Circuit:
             self.ybus[j,i] += (Yprim_tl.iloc[1,0])
             self.ybus[j,j] += (Yprim_tl.iloc[1,1])
         #Converting an array to a Dataframe matrix
+        #ybus_rounded = self.ybus.round(2)
         self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
 
 
 
 
+
+
 if __name__ == "__main__":
-    """
     #5 Bus Validation
     c1 = Circuit("Test Circuit")
     c1.add_bus("Bus1", 15.0)
@@ -116,6 +118,7 @@ if __name__ == "__main__":
    # print(T1.calc_yprim())
     c1.calc_ybus()
     print(c1.ybus)
+    """
     #Checking Circuit Class Functionality
     circuit1 = Circuit("Test Circuit")
 
