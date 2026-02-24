@@ -1,9 +1,11 @@
 from typing import Dict
-from Bus import Bus
+from bus import Bus
 from generator import Generator
 from load import Load
 from transformer import Transformer
 from transmission_line import TransmissionLine
+import numpy as np
+import pandas as pd
 
 class Circuit:
     def __init__(self, name:str):
@@ -13,16 +15,16 @@ class Circuit:
         self.transmission_lines: Dict[str, TransmissionLine] = {}
         self.generators: Dict[str, Generator] = {}
         self.loads: Dict[str, Load] = {}
+        self.ybus = None
 
 
-
-    def duplicate_name(self,d: dict, name:str, equipment_type:str ):
+    @staticmethod
+    def duplicate_name(d: dict, name:str, equipment_type:str ):
         if name in d:
             raise ValueError(f"Duplicate name {name} from {equipment_type}.")
 
     def add_bus(self, name:str, nominal_kv:float):
-        #Why don't we store the nominal kv here?
-        self.duplicate_name(self.buses, name, 'Bus')
+        Circuit.duplicate_name(d = self.buses, name = name, equipment_type= 'Bus')
         busobj = Bus(name, nominal_kv)
         self.buses[name] = busobj
         return busobj
@@ -51,8 +53,69 @@ class Circuit:
         self.loads[name] = loadobj
         return loadobj
 
+    #Adding Methods
+    def calc_ybus(self):
+        #Stores amount of buses are in the dictionary
+        N = len(self.buses)
+        #Initialize matrix
+        self.ybus = np.zeros((N, N), dtype= complex)
+        #Creates a new dictionary for every name it establishes an index value
+        bus_mapping = {name: Bus.bus_index for name, Bus in self.buses.items()}
+        #Extract all bus names
+        bus_names = list(self.buses.keys())
+    #Transformer
+        for name, tf_v in self.transformers.items():
+            Yprim_tf = tf_v.calc_yprim()
+            #print(Yprim_tf)
+
+            b1 = tf_v.bus1_name
+            b2 = tf_v.bus2_name
+
+            i = bus_mapping[b1]
+            j = bus_mapping[b2]
+            self.ybus[i, i] += (Yprim_tf.iloc[0, 0])
+            self.ybus[i, j] += (Yprim_tf.iloc[0, 1])
+            self.ybus[j, i] += (Yprim_tf.iloc[1, 0])
+            self.ybus[j, j] += (Yprim_tf.iloc[1, 1])
+
+        #Transmission_line
+        for name, tl_v in self.transmission_lines.items():
+            Yprim_tl = tl_v.calc_yprim()
+
+            b1 = tl_v.bus1_name
+            b2 = tl_v.bus2_name
+
+            i = bus_mapping[b1]
+            j = bus_mapping[b2]
+
+        #Stamping Transformer Pmatrix into Ybus
+            self.ybus[i,i] += (Yprim_tl.iloc[0,0])
+            self.ybus[i,j] += (Yprim_tl.iloc[0,1])
+            self.ybus[j,i] += (Yprim_tl.iloc[1,0])
+            self.ybus[j,j] += (Yprim_tl.iloc[1,1])
+
+        self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
+
+
+
+
 if __name__ == "__main__":
-    """"
+    """
+    #5 Bus Validation
+    c1 = Circuit("Test Circuit")
+    c1.add_bus("Bus1", 15.0)
+    c1.add_bus("Bus2", 345.0)
+    c1.add_bus("Bus3", 15.0)
+    c1.add_bus("Bus4", 345.0)
+    c1.add_bus("Bus5", 345.0)
+    c1.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02)
+    c1.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01)
+    c1.add_transmission_line("TL1", "Bus5", "Bus4", 0.002250, 0.25, 0.0, 0.44)
+    c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05,0.0,0.88)
+    c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
+   # print(T1.calc_yprim())
+    c1.calc_ybus()
+    print(c1.ybus)
     #Checking Circuit Class Functionality
     circuit1 = Circuit("Test Circuit")
 
