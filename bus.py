@@ -1,5 +1,5 @@
 class Bus:
-    index_counter = 1
+    index_counter = 0
 
     def __init__(self, name:str, nominal_kv:float):
         self.name = name
