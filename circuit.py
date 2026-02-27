@@ -61,8 +61,9 @@ class Circuit:
         self.ybus = np.zeros((N, N), dtype= complex)
         #Creates a new dictionary for every name it establishes an index value
         bus_mapping = {name: bus.bus_index for name, bus in self.buses.items()}
-        #Extract all bus names
-        bus_names = list(self.buses.keys())
+        #Extracting bus names
+        bus_names = list(bus_mapping.keys())
+
     #Transformer
         for name, tf_v in self.transformers.items():
             Yprim_tf = tf_v.calc_yprim()
@@ -94,6 +95,7 @@ class Circuit:
             self.ybus[j,i] += (Yprim_tl.iloc[1,0])
             self.ybus[j,j] += (Yprim_tl.iloc[1,1])
         #Converting an array to a Dataframe matrix
+
         ybus_rounded = self.ybus.round(2)
         self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
