@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="Completed Milestone 4 Ybus Admittance Matrix">
+    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="Added formatting for matrix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/circuit.py" beforeDir="false" afterPath="$PROJECT_DIR$/circuit.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,6 +21,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -57,7 +63,7 @@
     &quot;Python.transformer.executor&quot;: &quot;Run&quot;,
     &quot;Python.transmission_line.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Milestone-4&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -297,9 +303,11 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.generator" />
         <item itemvalue="Python.bus" />
         <item itemvalue="Python.load" />
+        <item itemvalue="Python.generator" />
+        <item itemvalue="Python.generator" />
+        <item itemvalue="Python.bus" />
       </list>
     </recent_temporary>
   </component>
@@ -378,29 +386,29 @@
       <option name="project" value="LOCAL" />
       <updated>1771512537225</updated>
     </task>
-    <task id="LOCAL-00008" summary="Refactored class names">
+    <task id="LOCAL-00008" summary="Milestone 3">
       <option name="closed" value="true" />
-      <created>1771951242219</created>
+      <created>1771954265123</created>
       <option name="number" value="00008" />
       <option name="presentableId" value="LOCAL-00008" />
       <option name="project" value="LOCAL" />
-      <updated>1771951242219</updated>
+      <updated>1771954265124</updated>
     </task>
-    <task id="LOCAL-00009" summary="Refactored class names">
+    <task id="LOCAL-00009" summary="Added formatting for matrix">
       <option name="closed" value="true" />
-      <created>1771951258261</created>
+      <created>1772111088957</created>
       <option name="number" value="00009" />
       <option name="presentableId" value="LOCAL-00009" />
       <option name="project" value="LOCAL" />
-      <updated>1771951258261</updated>
+      <updated>1772111088957</updated>
     </task>
-    <task id="LOCAL-00010" summary="Completed Milestone 4 Ybus Admittance Matrix">
+    <task id="LOCAL-00010" summary="Added formatting for matrix">
       <option name="closed" value="true" />
-      <created>1771951363443</created>
+      <created>1772111140416</created>
       <option name="number" value="00010" />
       <option name="presentableId" value="LOCAL-00010" />
       <option name="project" value="LOCAL" />
-      <updated>1771951363443</updated>
+      <updated>1772111140416</updated>
     </task>
     <option name="localTasksCounter" value="11" />
     <servers />
@@ -423,19 +431,18 @@
     <MESSAGE value="Test" />
     <MESSAGE value="Added gitignore file" />
     <MESSAGE value="Added series admittance and Yprim method" />
-    <MESSAGE value="Refactored class names" />
-    <MESSAGE value="Completed Milestone 4 Ybus Admittance Matrix" />
-    <option name="LAST_COMMIT_MESSAGE" value="Completed Milestone 4 Ybus Admittance Matrix" />
+    <MESSAGE value="Added formatting for matrix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added formatting for matrix" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$transmission_line.coverage" NAME="transmission_line Coverage Results" MODIFIED="1771942067696" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$transmission_line.coverage" NAME="transmission_line Coverage Results" MODIFIED="1772045673450" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Project_2$main.coverage" NAME="main Coverage Results" MODIFIED="1770732069026" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$load.coverage" NAME="load Coverage Results" MODIFIED="1771181749078" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$transformer.coverage" NAME="transformer Coverage Results" MODIFIED="1771951158755" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$load.coverage" NAME="load Coverage Results" MODIFIED="1772036905291" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$transformer.coverage" NAME="transformer Coverage Results" MODIFIED="1772045630714" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Project_2$load.coverage" NAME="load Coverage Results" MODIFIED="1770904736928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$circuit.coverage" NAME="circuit Coverage Results" MODIFIED="1771951086605" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$generator.coverage" NAME="generator Coverage Results" MODIFIED="1771512401852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$circuit.coverage" NAME="circuit Coverage Results" MODIFIED="1772206559885" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$Circuit.coverage" NAME="Circuit Coverage Results" MODIFIED="1771950841805" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$generator.coverage" NAME="generator Coverage Results" MODIFIED="1772036743903" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$Bus.coverage" NAME="Bus Coverage Results" MODIFIED="1771335146312" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
