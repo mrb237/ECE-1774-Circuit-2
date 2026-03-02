@@ -4,6 +4,7 @@ from generator import Generator
 from load import Load
 from transformer import Transformer
 from transmission_line import TransmissionLine
+from Breaker import Breaker
 import numpy as np
 import pandas as pd
 
@@ -15,6 +16,7 @@ class Circuit:
         self.transmission_lines: Dict[str, TransmissionLine] = {}
         self.generators: Dict[str, Generator] = {}
         self.loads: Dict[str, Load] = {}
+        self.breakers: Dict[str, Breaker] = {}
         self.ybus = None
 
 
@@ -52,6 +54,12 @@ class Circuit:
         loadobj = Load(name, bus1_name, mw, mvar)
         self.loads[name] = loadobj
         return loadobj
+
+    def add_breaker(self, name, node1_name: str, node2_name: str, state: bool, rating: float):
+        self.duplicate_name(self.breakers, name, 'Breaker')
+        breakerobj = Breaker(name, node1_name, node2_name, state, rating)
+        self.breakers[name] = breakerobj
+        return breakerobj
 
     #Adding Methods
     def calc_ybus(self):
