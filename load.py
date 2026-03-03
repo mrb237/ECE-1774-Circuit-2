@@ -4,6 +4,17 @@ class Load:
         self.bus1_name = bus1_name
         self.mw = mw
         self.mvar = mvar
+        self.p = self.calc_p()
+        self.q = self.calc_q()
+
+
+    def calc_p(self):
+        # P calculations
+        return p
+
+    def calc_q(self):
+        # Q calculations
+        return q
 
 if __name__ == "__main__":
     load1 = Load("Load1", "Bus2", 50.0, 30.0)

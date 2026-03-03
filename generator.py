@@ -4,6 +4,12 @@ class Generator:
         self.bus1_name = bus1_name
         self.voltage_setpoint = voltage_setpoint
         self.mw_setpoint = mw_setpoint
+        self.p = self.calc_p()
+
+
+    def calc_p(self):
+        # P calculations
+        return p
 
 if __name__ == "__main__":
     gen1 = Generator("G1", "Bus 1", 1.04, 100.0)
