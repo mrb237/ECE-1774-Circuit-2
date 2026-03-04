@@ -1,3 +1,5 @@
+from settings import SETTINGS
+
 class Generator:
     def __init__(self, name:str, bus1_name:str, voltage_setpoint:float, mw_setpoint:float):
         self.name = name
@@ -8,7 +10,7 @@ class Generator:
 
 
     def calc_p(self):
-        # P calculations
+        p = self.mw_setpoint/SETTINGS.sbase
         return p
 
 if __name__ == "__main__":
@@ -18,3 +20,4 @@ if __name__ == "__main__":
     print(f"Generator1 Bus Name: {gen1.bus1_name}")
     print(f"Generator1 Voltage Setpoint (V): {gen1.voltage_setpoint}")
     print(f"Load1 Real Power Setpoint (MW): {gen1.mw_setpoint}")
+    print(f"Generator1 Per-Unit Real Power: {gen1.p}")

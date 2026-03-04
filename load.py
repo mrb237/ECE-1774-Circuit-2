@@ -1,3 +1,5 @@
+from settings import SETTINGS
+
 class Load:
     def __init__(self, name:str, bus1_name:str, mw:float, mvar:float):
         self.name = name
@@ -9,11 +11,11 @@ class Load:
 
 
     def calc_p(self):
-        # P calculations
+        p = self.mw/SETTINGS.sbase
         return p
 
     def calc_q(self):
-        # Q calculations
+        q = self.mvar/SETTINGS.sbase
         return q
 
 if __name__ == "__main__":
@@ -23,3 +25,5 @@ if __name__ == "__main__":
     print(f"Load1 Bus Name: {load1.bus1_name}")
     print(f"Load1 Real Power: {load1.mw}")
     print(f"Load1 Reactive Power: {load1.mvar}")
+    print(f"Load1 Real Power Per-Unit: {load1.p}")
+    print(f"Load1 Reactive Power Per-Unit: {load1.q}")
