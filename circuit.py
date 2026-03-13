@@ -4,7 +4,6 @@ from generator import Generator
 from load import Load
 from transformer import Transformer
 from transmission_line import TransmissionLine
-from settings import Settings
 import numpy as np
 import pandas as pd
 

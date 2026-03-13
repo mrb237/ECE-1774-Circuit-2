@@ -16,7 +16,7 @@ class Bus:
 
     @property
     def bus_type(self):
-        return self._bus_type
+        return self.bus_type
 
     @bus_type.setter
     def bus_type(self, new_type: str):
