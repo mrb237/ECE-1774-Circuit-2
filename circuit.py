@@ -4,6 +4,7 @@ from generator import Generator
 from load import Load
 from transformer import Transformer
 from transmission_line import TransmissionLine
+from settings import Settings
 import numpy as np
 import pandas as pd
 
@@ -22,9 +23,9 @@ class Circuit:
         if name in d:
             raise ValueError(f"Duplicate name {name} from {equipment_type}.")
 
-    def add_bus(self, name: str, nominal_kv: float):
+    def add_bus(self, name: str, nominal_kv: float, bus_type: str):
         Circuit.duplicate_name(d=self.buses, name=name, equipment_type='Bus')
-        busobj = Bus(name, nominal_kv)
+        busobj = Bus(name, nominal_kv, bus_type)
         self.buses[name] = busobj
         return busobj
 

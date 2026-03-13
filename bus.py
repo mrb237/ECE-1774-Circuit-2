@@ -2,14 +2,14 @@ class Bus:
     index_counter = 0
     VALID_TYPES = {"PQ", "PV", "Slack"}
 
-    def __init__(self, name:str, nominal_kv:float):
+    def __init__(self, name:str, nominal_kv:float, bus_type:str = "PQ"):
         self.name = name
         self.nominal_kv = nominal_kv
         self.bus_index = Bus.index_counter
         Bus.index_counter += 1
         self.vpu = 1.0
         self.delta = 0.0
-        self._bus_type = "PQ"
+        self.bus_type = bus_type
 
     def __repr__(self):
         return f"Bus Nominal Voltage: {self.nominal_kv} Volts"
