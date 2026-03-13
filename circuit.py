@@ -98,65 +98,65 @@ class Circuit:
         ybus_rounded = self.ybus.round(2)
         self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
-        def compute_power_injection(self, bus, ybus, voltages):
-            # Bus indecies
-            i = bus.bus_index
-            # Bus voltage mag and delta from setpoint
-            Vi = bus.vpu
-            delta_i = np.deg2rad(bus.delta_i)
+    def compute_power_injection(self, bus, ybus, voltages):
+        #Bus indecies
+        i = bus.bus_index
+        #Bus voltage mag and delta from setpoint
+        Vi = bus.vpu
+        delta_i = np.deg2rad(bus.delta_i)
 
-            # Start values from 0
-            P_i = 0.0
-            Q_i = 0.0
+        #Start values from 0
+        P_i = 0.0
+        Q_i = 0.0
 
-            for bus_j in self.buses.values():
-                j = bus_j.bus_index
-                Vj = bus_j.vpu
-                delta_j = np.deg2rad(bus.delta_j)
+        for bus_j in self.buses.values():
+            j = bus_j.bus_index
+            Vj = bus_j.vpu
+            delta_j = np.deg2rad(bus.delta_j)
 
-                Yij = self.ybus[i, j]
+            Yij = self.ybus[i, j]
 
-                Gij = Yij.real
-                Bij = Yij.imag
-                delta_ij = delta_i - delta_j
+            Gij = Yij.real
+            Bij = Yij.imag
+            delta_ij = delta_i - delta_j
 
-                P_i = abs(Vi) * abs(Vj) * (Gij * np.cos(delta_ij) + Bij * np.sin(delta_ij))
-                Q_i = abs(Vi) * abs(Vj) * (Gij * np.sin(delta_ij) - Bij * np.cos(delta_ij))
+            P_i = abs(Vi) * abs(Vj) * (Gij* np.cos(delta_ij) + Bij * np.sin(delta_ij))
+            Q_i = abs(Vi) * abs(Vj) * (Gij* np.sin(delta_ij) - Bij * np.cos(delta_ij))
 
-                return P_i, Q_i
+            return P_i, Q_i
 
-        def compute_power_mismatch(self, buses, ybus, voltages):
-            power_mismatches = []
+    def compute_power_mismatch(self, buses, ybus, voltages):
+        power_mismatches = []
 
-            for bus in self.buses.values():
-                if bus.bus_type == "Slack":
-                    continue
+        for bus in self.buses.values():
+            if bus.bus_type == "Slack":
+                continue
 
-            Pcalc, Qcalc = self.compute_power_injection(buses, ybus, voltages)
+        Pcalc, Qcalc = self.compute_power_injection(buses, ybus, voltages)
 
-            Pspec = 0.0
-            Qspec = 0.0
+        Pspec = 0.0
+        Qspec = 0.0
 
-            for gen in self.generators.values():
-                if gen.bus1_name == bus.name:
-                    Pspec += gen.p
+        for gen in self.generators.values():
+            if gen.bus1_name == bus.name:
+                Pspec += gen.p
 
-            for load in self.loads.values():
-                if load.bus1_name == bus.name:
-                    Pspec -= load.p
-                    Qspec -= load.q
+        for load in self.loads.values():
+            if load.bus1_name == bus.name:
+                Pspec -= load.p
+                Qspec -= load.q
 
-            # Both PV and PQ
-            if bus.bus_type == "PQ" or "PV":
-                delta_P = Pspec - Pcalc
-                power_mismatches.append(delta_P)
+        #Both PV and PQ
+        if bus.bus_type == "PQ" or "PV":
+            delta_P = Pspec - Pcalc
+            power_mismatches.append(delta_P)
 
-            # For PQ
-            if bus.bus_type == "PQ":
-                deltaQ = Qspec - Qcalc
-                power_mismatches.append(deltaQ)
+        #For PQ
+        if bus.bus_type == "PQ":
+            deltaQ = Qspec - Qcalc
+            power_mismatches.append(deltaQ)
 
-            return np.array(power_mismatches)
+        return np.array(power_mismatches)
 
 
 if __name__ == "__main__":
