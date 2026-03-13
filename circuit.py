@@ -1,4 +1,6 @@
 from typing import Dict
+
+import bus
 from bus import Bus
 from generator import Generator
 from load import Load
@@ -22,9 +24,9 @@ class Circuit:
         if name in d:
             raise ValueError(f"Duplicate name {name} from {equipment_type}.")
 
-    def add_bus(self, name: str, nominal_kv: float):
+    def add_bus(self, name: str, nominal_kv: float, bus_type: str):
         Circuit.duplicate_name(d=self.buses, name=name, equipment_type='Bus')
-        busobj = Bus(name, nominal_kv)
+        busobj = Bus(name, nominal_kv, bus_type)
         self.buses[name] = busobj
         return busobj
 
@@ -98,12 +100,12 @@ class Circuit:
         ybus_rounded = self.ybus.round(2)
         self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
-    def compute_power_injection(self, bus, ybus, voltages):
+    def compute_power_injection(self, bus):
         #Bus indecies
         i = bus.bus_index
         #Bus voltage mag and delta from setpoint
         Vi = bus.vpu
-        delta_i = np.deg2rad(bus.delta_i)
+        delta_i = np.deg2rad(bus.delta)
 
         #Start values from 0
         P_i = 0.0
@@ -112,49 +114,49 @@ class Circuit:
         for bus_j in self.buses.values():
             j = bus_j.bus_index
             Vj = bus_j.vpu
-            delta_j = np.deg2rad(bus.delta_j)
+            delta_j = np.deg2rad(bus_j.delta)
 
-            Yij = self.ybus[i, j]
+            Yij = self.ybus.iloc[i, j]
 
             Gij = Yij.real
             Bij = Yij.imag
             delta_ij = delta_i - delta_j
 
-            P_i = abs(Vi) * abs(Vj) * (Gij* np.cos(delta_ij) + Bij * np.sin(delta_ij))
-            Q_i = abs(Vi) * abs(Vj) * (Gij* np.sin(delta_ij) - Bij * np.cos(delta_ij))
+            P_i += abs(Vi) * abs(Vj) * (Gij* np.cos(delta_ij) + Bij * np.sin(delta_ij))
+            Q_i += abs(Vi) * abs(Vj) * (Gij * np.sin(delta_ij) - Bij * np.cos(delta_ij))
 
             return P_i, Q_i
 
-    def compute_power_mismatch(self, buses, ybus, voltages):
+    def compute_power_mismatch(self):
         power_mismatches = []
 
         for bus in self.buses.values():
             if bus.bus_type == "Slack":
                 continue
 
-        Pcalc, Qcalc = self.compute_power_injection(buses, ybus, voltages)
+            Pcalc, Qcalc = self.compute_power_injection(bus)
 
-        Pspec = 0.0
-        Qspec = 0.0
+            Pspec = 0.0
+            Qspec = 0.0
 
-        for gen in self.generators.values():
-            if gen.bus1_name == bus.name:
-                Pspec += gen.p
+            for gen in self.generators.values():
+                if gen.bus1_name == bus.name:
+                    Pspec += gen.p
 
-        for load in self.loads.values():
-            if load.bus1_name == bus.name:
-                Pspec -= load.p
-                Qspec -= load.q
+            for load in self.loads.values():
+                if load.bus1_name == bus.name:
+                    Pspec -= load.p
+                    Qspec -= load.q
 
-        #Both PV and PQ
-        if bus.bus_type == "PQ" or "PV":
-            delta_P = Pspec - Pcalc
-            power_mismatches.append(delta_P)
+            #Both PV and PQ
+            if bus.bus_type == "PQ" or bus.bus_type == "PV":
+                delta_P = Pspec - Pcalc
+                power_mismatches.append(delta_P)
 
-        #For PQ
-        if bus.bus_type == "PQ":
-            deltaQ = Qspec - Qcalc
-            power_mismatches.append(deltaQ)
+            #For PQ
+            if bus.bus_type == "PQ":
+                deltaQ = Qspec - Qcalc
+                power_mismatches.append(deltaQ)
 
         return np.array(power_mismatches)
 
@@ -162,11 +164,11 @@ class Circuit:
 if __name__ == "__main__":
     # 5 Bus Validation
     c1 = Circuit("Test Circuit")
-    c1.add_bus("Bus1", 15.0)
-    c1.add_bus("Bus2", 345.0)
-    c1.add_bus("Bus3", 15.0)
-    c1.add_bus("Bus4", 345.0)
-    c1.add_bus("Bus5", 345.0)
+    c1.add_bus("Bus1", 15.0, "Slack")
+    c1.add_bus("Bus2", 345.0, "PQ")
+    c1.add_bus("Bus3", 15.0, "PQ")
+    c1.add_bus("Bus4", 345.0, "PV")
+    c1.add_bus("Bus5", 345.0, "PV")
     c1.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02)
     c1.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01)
     c1.add_transmission_line("TL1", "Bus5", "Bus4", 0.002250, 0.025, 0.0, 0.44)
@@ -177,6 +179,27 @@ if __name__ == "__main__":
     # print(T1.calc_yprim())
     c1.calc_ybus()
     print(c1.ybus)
+    mismatch = c1.compute_power_mismatch()
+
+    print("\nStructured Mismatch Output:")
+    index = 0
+
+    for bus in c1.buses.values():
+
+        if bus.bus_type == "Slack":
+            continue
+
+        if bus.bus_type == "PQ":
+            print(f"ΔP at {bus.name}: {mismatch[index]:.6f}")
+            index += 1
+
+            print(f"ΔQ at {bus.name}: {mismatch[index]:.6f}")
+            index += 1
+
+        elif bus.bus_type == "PV":
+            print(f"ΔP at {bus.name}: {mismatch[index]:.6f}")
+            index += 1
+
     """
     #Checking Circuit Class Functionality
     circuit1 = Circuit("Test Circuit")
