@@ -122,10 +122,10 @@ class Circuit:
             Bij = Yij.imag
             delta_ij = delta_i - delta_j
 
-            P_i += abs(Vi) * abs(Vj) * (Gij* np.cos(delta_ij) + Bij * np.sin(delta_ij))
-            Q_i += abs(Vi) * abs(Vj) * (Gij * np.sin(delta_ij) - Bij * np.cos(delta_ij))
+            P_i += Vi * Vj * (Gij* np.cos(delta_ij) + Bij * np.sin(delta_ij))
+            Q_i += Vi * Vj * (Gij * np.sin(delta_ij) - Bij * np.cos(delta_ij))
 
-            return P_i, Q_i
+        return P_i, Q_i
 
     def compute_power_mismatch(self):
         power_mismatches = []
@@ -148,15 +148,12 @@ class Circuit:
                     Pspec -= load.p
                     Qspec -= load.q
 
-            #Both PV and PQ
-            if bus.bus_type == "PQ" or bus.bus_type == "PV":
-                delta_P = Pspec - Pcalc
-                power_mismatches.append(delta_P)
+            delta_P = Pspec - Pcalc
+            power_mismatches.append(delta_P)
 
-            #For PQ
             if bus.bus_type == "PQ":
-                deltaQ = Qspec - Qcalc
-                power_mismatches.append(deltaQ)
+                delta_Q = Qspec - Qcalc
+                power_mismatches.append(delta_Q)
 
         return np.array(power_mismatches)
 
@@ -183,23 +180,17 @@ if __name__ == "__main__":
 
     print("\nStructured Mismatch Output:")
     index = 0
-
     for bus in c1.buses.values():
-
         if bus.bus_type == "Slack":
             continue
 
-        if bus.bus_type == "PQ":
-            print(f"ΔP at {bus.name}: {mismatch[index]:.6f}")
-            index += 1
+        print(f"ΔP at {bus.name}: {mismatch[index]:.6f}")
+        index += 1
 
+        if bus.bus_type == "PQ":
             print(f"ΔQ at {bus.name}: {mismatch[index]:.6f}")
             index += 1
-
-        elif bus.bus_type == "PV":
-            print(f"ΔP at {bus.name}: {mismatch[index]:.6f}")
-            index += 1
-
+    
     """
     #Checking Circuit Class Functionality
     circuit1 = Circuit("Test Circuit")
