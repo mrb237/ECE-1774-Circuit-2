@@ -161,21 +161,52 @@ class Circuit:
 if __name__ == "__main__":
     # 5 Bus Validation
     c1 = Circuit("Test Circuit")
+
     c1.add_bus("Bus1", 15.0, "Slack")
     c1.add_bus("Bus2", 345.0, "PQ")
-    c1.add_bus("Bus3", 15.0, "PQ")
-    c1.add_bus("Bus4", 345.0, "PV")
-    c1.add_bus("Bus5", 345.0, "PV")
+    c1.add_bus("Bus3", 15.0, "PV")
+    c1.add_bus("Bus4", 345.0, "PQ")
+    c1.add_bus("Bus5", 345.0, "PQ")
+
     c1.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02)
     c1.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01)
-    c1.add_transmission_line("TL1", "Bus5", "Bus4", 0.002250, 0.025, 0.0, 0.44)
+
+    c1.add_transmission_line("TL1", "Bus5", "Bus4", 0.00225, 0.025, 0.0, 0.44)
     c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
     c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
+
+    c1.add_generator("G1", "Bus1", 1.00, 0.0)
+    c1.add_generator("G2", "Bus3", 1.05, 520.0)
+    # Old:
+    # c1.add_generator("G1", "Bus1", 1.04, 0.0)     # Slack bus, MW not used directly in mismatch
+    # c1.add_generator("G2", "Bus4", 1.01, 400.0)   # Example PV generator
+    # c1.add_generator("G3", "Bus5", 1.01, 600.0)   # Example PV generator
+
     c1.add_load("L1", "Bus3", 80.0, 40.0)
     c1.add_load("L2", "Bus2", 800.0, 280.0)
-    # print(T1.calc_yprim())
+
     c1.calc_ybus()
+
+    print("Ybus:\n")
     print(c1.ybus)
+
+    # Set solved voltages and angles from reference / PowerWorld
+    c1.buses["Bus1"].vpu = 1.00000
+    c1.buses["Bus1"].delta = 0.00
+
+    c1.buses["Bus2"].vpu = 0.83377
+    c1.buses["Bus2"].delta = -22.41
+
+    c1.buses["Bus3"].vpu = 1.05000
+    c1.buses["Bus3"].delta = -0.60
+
+    c1.buses["Bus4"].vpu = 1.01930
+    c1.buses["Bus4"].delta = -2.83
+
+    c1.buses["Bus5"].vpu = 0.97429
+    c1.buses["Bus5"].delta = -4.55
+
+    # Compute mismatch vector
     mismatch = c1.compute_power_mismatch()
 
     print("\nStructured Mismatch Output:")
