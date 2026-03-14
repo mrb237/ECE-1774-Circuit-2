@@ -1,6 +1,5 @@
 from typing import Dict
 
-import bus
 from bus import Bus
 from generator import Generator
 from load import Load
