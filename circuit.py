@@ -158,6 +158,7 @@ class Circuit:
         return np.array(power_mismatches)
 
 
+
 if __name__ == "__main__":
     # 5 Bus Validation
     c1 = Circuit("Test Circuit")
