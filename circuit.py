@@ -122,8 +122,8 @@ class Circuit:
             Bij = Yij.imag
             delta_ij = delta_i - delta_j
 
-            P_i += Vi * Vj * (Gij* np.cos(delta_ij) + Bij * np.sin(delta_ij))
-            Q_i += Vi * Vj * (Gij * np.sin(delta_ij) - Bij * np.cos(delta_ij))
+            P_i += abs(Vi) * abs(Vj) * (Gij* np.cos(delta_ij) + Bij * np.sin(delta_ij))
+            Q_i += abs(Vi) * abs(Vj) * (Gij * np.sin(delta_ij) - Bij * np.cos(delta_ij))
 
         return P_i, Q_i
 
@@ -163,9 +163,11 @@ if __name__ == "__main__":
     c1 = Circuit("Test Circuit")
     c1.add_bus("Bus1", 15.0, "Slack")
     c1.add_bus("Bus2", 345.0, "PQ")
-    c1.add_bus("Bus3", 15.0, "PQ")
-    c1.add_bus("Bus4", 345.0, "PV")
-    c1.add_bus("Bus5", 345.0, "PV")
+    c1.add_bus("Bus3", 15.0, "PV")
+    c1.add_bus("Bus4", 345.0, "PQ")
+    c1.add_bus("Bus5", 345.0, "PQ")
+    c1.add_generator("Gen1", "Bus1", 395.0, 114.0)
+    c1.add_generator("Gen2", "Bus3", 520.0, 337.0)
     c1.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02)
     c1.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01)
     c1.add_transmission_line("TL1", "Bus5", "Bus4", 0.002250, 0.025, 0.0, 0.44)
