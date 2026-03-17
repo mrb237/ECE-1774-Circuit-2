@@ -97,8 +97,10 @@ class Circuit:
             self.ybus[j, j] += (Yprim_tl.iloc[1, 1])
         # Converting an array to a Dataframe matrix
 
-        ybus_rounded = self.ybus.round(2)
-        self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
+        # ybus_rounded = self.ybus.round(2)
+        # self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
+
+        self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
 
     def compute_power_injection(self, bus):
         # Bus indecies
@@ -190,21 +192,21 @@ if __name__ == "__main__":
     print("Ybus:\n")
     print(c1.ybus)
 
-    # Set solved voltages and angles from reference / PowerWorld
+    # After one iteration
     c1.buses["Bus1"].vpu = 1.00000
     c1.buses["Bus1"].delta = 0.00
 
-    c1.buses["Bus2"].vpu = 0.83377
-    c1.buses["Bus2"].delta = -22.41
+    c1.buses["Bus2"].vpu = 0.98797
+    c1.buses["Bus2"].delta = -14.66
 
     c1.buses["Bus3"].vpu = 1.05000
-    c1.buses["Bus3"].delta = -0.60
+    c1.buses["Bus3"].delta = 0.16
 
-    c1.buses["Bus4"].vpu = 1.01930
-    c1.buses["Bus4"].delta = -2.83
+    c1.buses["Bus4"].vpu = 1.03314
+    c1.buses["Bus4"].delta = -1.63
 
-    c1.buses["Bus5"].vpu = 0.97429
-    c1.buses["Bus5"].delta = -4.55
+    c1.buses["Bus5"].vpu = 1.01057
+    c1.buses["Bus5"].delta = -3.21
 
     # Compute mismatch vector
     mismatch = c1.compute_power_mismatch()
