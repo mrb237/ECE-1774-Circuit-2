@@ -193,6 +193,7 @@ if __name__ == "__main__":
         if bus.bus_type == "PQ":
             print(f"ΔQ at {bus.name}: {mismatch[index]:.6f}")
             index += 1
+        print(bus.vpu)
     
     """
     #Checking Circuit Class Functionality
