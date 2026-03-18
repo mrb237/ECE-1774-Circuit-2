@@ -149,9 +149,9 @@ class Circuit:
                 if load.bus1_name == bus.name:
                     Pspec -= load.p
                     Qspec -= load.q
-
-            delta_P = Pspec - Pcalc
-            power_mismatches.append(delta_P)
+            if bus.bus_type == "PQ" or bus.bus_type == "PV":
+                delta_P = Pspec - Pcalc
+                power_mismatches.append(delta_P)
 
             if bus.bus_type == "PQ":
                 delta_Q = Qspec - Qcalc
@@ -163,6 +163,7 @@ class Circuit:
 if __name__ == "__main__":
     # 5 Bus Validation
     c1 = Circuit("Test Circuit")
+    Bus.index_counter = 0
 
     c1.add_bus("Bus1", 15.0, "Slack")
     c1.add_bus("Bus2", 345.0, "PQ")
@@ -202,11 +203,12 @@ if __name__ == "__main__":
     c1.buses["Bus3"].vpu = 1.05000
     c1.buses["Bus3"].delta = 0.16
 
-    c1.buses["Bus4"].vpu = 1.03314
-    c1.buses["Bus4"].delta = -1.63
+    c1.buses["Bus4"].vpu = 1.03345
+    c1.buses["Bus4"].delta = -1.6261
 
-    c1.buses["Bus5"].vpu = 1.01057
-    c1.buses["Bus5"].delta = -3.21
+    c1.buses["Bus5"].vpu = 1.0105737711
+    c1.buses["Bus5"].delta = -3.20502338508
+
 
     # Compute mismatch vector
     mismatch = c1.compute_power_mismatch()
@@ -223,6 +225,8 @@ if __name__ == "__main__":
         if bus.bus_type == "PQ":
             print(f"ΔQ at {bus.name}: {mismatch[index]:.6f}")
             index += 1
+
+    print("Ko")
 
     """
     #Checking Circuit Class Functionality
