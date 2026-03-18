@@ -107,6 +107,7 @@ class Circuit:
         i = bus.bus_index
         # Bus voltage mag and delta from setpoint
         Vi = bus.vpu
+        bus_delta = bus.delta
         delta_i = np.deg2rad(bus.delta)
 
         # Start values from 0
@@ -156,7 +157,7 @@ class Circuit:
             if bus.bus_type == "PQ":
                 delta_Q = Qspec - Qcalc
                 power_mismatches.append(delta_Q)
-
+            test = np.array(power_mismatches)
         return np.array(power_mismatches)
 
 
@@ -194,20 +195,23 @@ if __name__ == "__main__":
     print(c1.ybus)
 
     # After one iteration
-    c1.buses["Bus1"].vpu = 1.00000
+    c1.buses["Bus1"].vpu = 1.0000000000
     c1.buses["Bus1"].delta = 0.00
 
-    c1.buses["Bus2"].vpu = 0.98797
-    c1.buses["Bus2"].delta = -14.66
+    c1.buses["Bus2"].vpu = 0.9879657065
+    c1.buses["Bus2"].delta = -14.657785055656685
 
-    c1.buses["Bus3"].vpu = 1.05000
-    c1.buses["Bus3"].delta = 0.16
 
-    c1.buses["Bus4"].vpu = 1.03345
-    c1.buses["Bus4"].delta = -1.6261
+    c1.buses["Bus3"].vpu = 1.0500038185
+    c1.buses["Bus3"].delta = 0.155483410181187
+
+
+    c1.buses["Bus4"].vpu = 1.0331396265
+    c1.buses["Bus4"].delta = -1.633263694297374
+
 
     c1.buses["Bus5"].vpu = 1.0105737711
-    c1.buses["Bus5"].delta = -3.20502338508
+    c1.buses["Bus5"].delta = -3.205023385079998
 
 
     # Compute mismatch vector
