@@ -18,12 +18,19 @@ class Jacobian:
         self.jacobian = np.zeros((self.size, self.size), dtype=float)
 
     def calc_jacobian(self, buses, ybus, angles, voltages):
-        for bus in self.buses.values():
-            if bus.bus_type == "PQ":
-                # P & Q
+        for kbus in self.buses.values():
+            for nbus in self.buses.values():
+                if kbus.bus_type == "Slack":
+                    continue
 
-            if bus.bus_type == "PV":
-                # P
+                if kbus.bus_type == "PQ":
+                    # P & Q, J1 - J4
+                    if kbus==nbus:
+                        # Slide 7 Calculations
+                    # Else Slide 6 Calculations
 
-            if bus.bus_type == "Slack":
-                continue
+                if kbus.bus_type == "PV":
+                    # P, J1 and J2 only
+                    if kbus==nbus:
+                        # Slide 7 Calculations
+                    # Else Slide 6 Calculations

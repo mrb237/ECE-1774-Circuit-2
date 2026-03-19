@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="Created milestone 7 branch">
+    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="Milestone 7 - Not Done">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/jacobian.py" beforeDir="false" afterPath="$PROJECT_DIR$/jacobian.py" afterDir="false" />
     </list>
@@ -34,12 +34,12 @@
     &quot;assignee&quot;: &quot;mrb237&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/mrb237/ECE-1774-Circuit-2.git&quot;,
-    &quot;accountId&quot;: &quot;60788b1f-c330-4148-bd4f-2365c798d7e1&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/mrb237/ECE-1774-Circuit-2.git",
+    "accountId": "9b8c52d6-f195-43d0-bc00-fb0a186391aa"
   }
-}</component>
+}]]></component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -170,8 +170,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.29346.308" />
-        <option value="bundled-python-sdk-ca5e2b39c7df-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.308" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PY-242.23339.19" />
+        <option value="bundled-python-sdk-0029f7779945-399fe30bd8c1-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.23339.19" />
       </set>
     </attachedChunks>
   </component>
@@ -187,6 +187,7 @@
       <workItem from="1770901098789" duration="695000" />
       <workItem from="1772649513863" duration="3244000" />
       <workItem from="1773588218854" duration="6381000" />
+      <workItem from="1773938020280" duration="344000" />
     </task>
     <task id="LOCAL-00001" summary="Test">
       <option name="closed" value="true" />
@@ -300,7 +301,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773590858811</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Milestone 7 - Not Done">
+      <option name="closed" value="true" />
+      <created>1773927810364</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1773927810364</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -325,7 +334,8 @@
     <MESSAGE value="Added to generator and load, needs editing" />
     <MESSAGE value="Milestone 6" />
     <MESSAGE value="Created milestone 7 branch" />
-    <option name="LAST_COMMIT_MESSAGE" value="Created milestone 7 branch" />
+    <MESSAGE value="Milestone 7 - Not Done" />
+    <option name="LAST_COMMIT_MESSAGE" value="Milestone 7 - Not Done" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$load.coverage" NAME="load Coverage Results" MODIFIED="1772036905291" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
