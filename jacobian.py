@@ -178,7 +178,6 @@ if __name__ == "__main__":
     from bus import Bus
     from circuit import Circuit
 
-    # 5 Bus Validation
     c1 = Circuit("Test Circuit")
     Bus.index_counter = 0
 
@@ -222,7 +221,6 @@ if __name__ == "__main__":
     c1.buses["Bus5"].vpu = 0.97428869484455565
     c1.buses["Bus5"].delta = -4.54788331806453890
 
-    # Optional: check mismatch first
     mismatch = c1.compute_power_mismatch()
 
     print("\nStructured Mismatch Output:")
@@ -238,7 +236,6 @@ if __name__ == "__main__":
             print(f"ΔQ at {bus.name}: {mismatch[index]:.6f}")
             index += 1
 
-    # Optional dictionaries to match the calc_jacobian signature
     angle_dict = {
         "Bus1": c1.buses["Bus1"].delta,
         "Bus2": c1.buses["Bus2"].delta,
@@ -255,7 +252,6 @@ if __name__ == "__main__":
         "Bus5": c1.buses["Bus5"].vpu,
     }
 
-    # Build Jacobian
     J = Jacobian(c1)
     jacobian_matrix = J.calc_jacobian(
         buses=c1.buses,
@@ -270,7 +266,6 @@ if __name__ == "__main__":
     print("\nJacobian Shape:")
     print(jacobian_matrix.shape)
 
-    # DataFrame version
     formatter = JacobianFormatter(J)
     print("\nJacobian DataFrame:\n")
     formatter.print_dataframe(decimals=2)
