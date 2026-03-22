@@ -154,15 +154,15 @@ class JacobianFormatter:
     def to_dataframe(self):
         row_labels = []
         for bus in self.jacobian_obj.angle_buses:
-            row_labels.append(f"P {bus.name}")
+            row_labels.append(f"Real Power Bus {bus.name}")
         for bus in self.jacobian_obj.voltage_buses:
-            row_labels.append(f"Q {bus.name}")
+            row_labels.append(f"Reactive Power Bus {bus.name}")
 
         col_labels = []
         for bus in self.jacobian_obj.angle_buses:
-            col_labels.append(f"δ {bus.name}")
+            col_labels.append(f"Angle Bus {bus.name}")
         for bus in self.jacobian_obj.voltage_buses:
-            col_labels.append(f"V {bus.name}")
+            col_labels.append(f"Volt Mag Bus {bus.name}")
 
         return pd.DataFrame(
             self.jacobian_obj.jacobian,
