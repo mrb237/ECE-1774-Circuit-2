@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="Updated complete milestone 6 to 7">
-      <change afterPath="$PROJECT_DIR$/power_flow.py" afterDir="false" />
+    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="Updated power flow (Uncomplete)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/power_flow.py" beforeDir="false" afterPath="$PROJECT_DIR$/power_flow.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,7 +63,7 @@
     "Python.jacobian.executor": "Run",
     "Python.load.executor": "Run",
     "Python.main.executor": "Run",
-    "Python.power_flow.executor": "Run",
+    "Python.power_flow.executor": "Debug",
     "Python.transformer.executor": "Run",
     "Python.transmission_line.executor": "Run",
     "RunOnceActivity.MCP Project settings loaded": "true",
@@ -340,7 +340,23 @@
       <option name="project" value="LOCAL" />
       <updated>1774205439242</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Updated complete milestone 6 to 7">
+      <option name="closed" value="true" />
+      <created>1774291434106</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1774291434106</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Updated power flow (Uncomplete)">
+      <option name="closed" value="true" />
+      <created>1774291474926</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1774291474926</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -368,10 +384,22 @@
     <MESSAGE value="Milestone 7 - Not Done" />
     <MESSAGE value="Merge remote-tracking branch 'origin/Milestone-7' into Milestone-7" />
     <MESSAGE value="Updated complete milestone 6 to 7" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated complete milestone 6 to 7" />
+    <MESSAGE value="Updated power flow (Uncomplete)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated power flow (Uncomplete)" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/power_flow.py</url>
+          <line>53</line>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$power_flow.coverage" NAME="power_flow Coverage Results" MODIFIED="1774291257733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$power_flow.coverage" NAME="power_flow Coverage Results" MODIFIED="1774356395797" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$load.coverage" NAME="load Coverage Results" MODIFIED="1772036905291" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Project_2$main.coverage" NAME="main Coverage Results" MODIFIED="1770732069026" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$jacobian.coverage" NAME="jacobian Coverage Results" MODIFIED="1774205417899" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

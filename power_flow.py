@@ -7,7 +7,7 @@ class PowerFlow:
         self.circuit = circuit
         self.jacobian = jacobian
         self.tol = 0.001
-        self.max_iter = 100000
+        self.max_iter = 50
 
 
     def solve(self, tol, max_iter):
@@ -50,6 +50,8 @@ class PowerFlow:
                 # update PQ bus voltages
                 for i, bus in enumerate(jacobian_obj.voltage_buses):
                     bus.vpu += delta_voltages[i]
+
+                print("h")
 
         if not self.converged:
             raise ValueError("Algorithm did not converge")
@@ -144,7 +146,7 @@ if __name__ == '__main__':
 
     pf = PowerFlow(c1, J)
 
-    NR = pf.solve(tol = 0.001, max_iter = 10000)
+    NR = pf.solve(tol = 0.001, max_iter = 50)
     print("\nNR:\n")
     print(NR)
     print("\nNewton-Raphson Result:\n")
