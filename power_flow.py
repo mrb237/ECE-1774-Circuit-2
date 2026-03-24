@@ -7,7 +7,7 @@ class PowerFlow:
         self.circuit = circuit
         self.jacobian = jacobian
         self.tol = 0.001
-        self.max_iter = 50
+        self.max_iter = 10
 
 
     def solve(self, tol, max_iter):
@@ -22,12 +22,15 @@ class PowerFlow:
                 continue
             elif bus.bus_type == "PV":
                 bus.delta = 0.0
+                for gen in self.circuit.generators.values():
+                    if gen.bus1_name == bus.name:
+                        bus.vpu = gen.voltage_setpoint
             elif bus.bus_type == "PQ":
                 bus.vpu = 1.0
                 bus.delta = 0.0
 
         # Newton-Raphson iteration loop
-        for iteration in range(1, max_iter + 1):
+        for self.iteration in range(1, max_iter + 1):
             mismatch = self.circuit.compute_power_mismatch()
             J = jacobian_obj.calc_jacobian()
             max_mismatch = np.max(abs(mismatch))
@@ -50,8 +53,6 @@ class PowerFlow:
                 # update PQ bus voltages
                 for i, bus in enumerate(jacobian_obj.voltage_buses):
                     bus.vpu += delta_voltages[i]
-
-                print("h")
 
         if not self.converged:
             raise ValueError("Algorithm did not converge")
@@ -146,8 +147,13 @@ if __name__ == '__main__':
 
     pf = PowerFlow(c1, J)
 
-    NR = pf.solve(tol = 0.001, max_iter = 50)
-    print("\nNR:\n")
-    print(NR)
-    print("\nNewton-Raphson Result:\n")
-    print(NR)
+    NR = pf.solve(tol=0.001, max_iter = 50)
+
+    print("\nNewton-Raphson Results:\n")
+    print(f"Converged: {NR['converged']}")
+    print(f"Iterations: {NR['iterations']}\n")
+
+    for bus_name, data in NR["bus_data"].items():
+        print(f"{bus_name}:")
+        print(f"   Voltage (pu): {data['vpu']:.6f}")
+        print(f"   Angle (deg):  {data['delta']:.6f}\n")
