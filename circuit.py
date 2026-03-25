@@ -5,6 +5,7 @@ from generator import Generator
 from load import Load
 from transformer import Transformer
 from transmission_line import TransmissionLine
+from Breaker import Breaker
 import numpy as np
 import pandas as pd
 
@@ -16,6 +17,7 @@ class Circuit:
         self.transmission_lines: Dict[str, TransmissionLine] = {}
         self.generators: Dict[str, Generator] = {}
         self.loads: Dict[str, Load] = {}
+        self.breakers: Dict[str, Breaker] = {}
         self.ybus = None
 
     @staticmethod
@@ -53,6 +55,20 @@ class Circuit:
         self.loads[name] = loadobj
         return loadobj
 
+    def add_breaker(self, name: str, node1_name: str, node2_name: str, is_closed: bool = True, rating: float = 0.0):
+        self.duplicate_name(self.breakers, name, 'Breaker')
+        breakerobj = Breaker(name, node1_name, node2_name, is_closed, rating)
+        self.breakers[name] = breakerobj
+        return breakerobj
+
+    def is_connection_closed(self, node1_name: str, node2_name: str):
+        for breaker in self.breakers.values():
+            a = breaker.node1_name
+            b = breaker.node2_name
+            if (a == node1_name and b == node2_name) or (a == node2_name and b == node1_name):
+                return breaker.is_closed
+        return True
+
     # Adding Methods
     def calc_ybus(self):
         # Stores amount of buses are in the dictionary
@@ -66,6 +82,9 @@ class Circuit:
 
         # Transformer
         for name, tf_v in self.transformers.items():
+            if not self.is_connection_closed(tf_v.bus1_name, tf_v.bus2_name):
+                continue
+
             Yprim_tf = tf_v.calc_yprim()
             # print(Yprim_tf)
 
@@ -81,6 +100,9 @@ class Circuit:
 
         # Transmission_line
         for name, tl_v in self.transmission_lines.items():
+            if not self.is_connection_closed(tl_v.bus1_name, tl_v.bus2_name):
+                continue
+
             Yprim_tl = tl_v.calc_yprim()
 
             b1 = tl_v.bus1_name
@@ -96,10 +118,10 @@ class Circuit:
             self.ybus[j, j] += (Yprim_tl.iloc[1, 1])
         # Converting an array to a Dataframe matrix
 
-        # ybus_rounded = self.ybus.round(2)
-        # self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
+        ybus_rounded = self.ybus.round(2)
+        self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
-        self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
+        # self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
 
     def compute_power_injection(self, bus):
         # Bus indecies
@@ -181,13 +203,22 @@ if __name__ == "__main__":
 
     c1.add_generator("G1", "Bus1", 1.00, 0.0)
     c1.add_generator("G2", "Bus3", 1.05, 520.0)
-    # Old:
-    # c1.add_generator("G1", "Bus1", 1.04, 0.0)     # Slack bus, MW not used directly in mismatch
-    # c1.add_generator("G2", "Bus4", 1.01, 400.0)   # Example PV generator
-    # c1.add_generator("G3", "Bus5", 1.01, 600.0)   # Example PV generator
 
     c1.add_load("L1", "Bus3", 80.0, 40.0)
     c1.add_load("L2", "Bus2", 800.0, 280.0)
+
+    c1.add_breaker("BR_G1", "G1", "Bus1", True)
+    c1.add_breaker("BR_G2", "G2", "Bus3", True)
+
+    c1.add_breaker("BR_T1", "Bus1", "Bus5", True)
+    c1.add_breaker("BR_T2", "Bus3", "Bus4", True)
+
+    c1.add_breaker("BR_TL1", "Bus5", "Bus4", True)
+    c1.add_breaker("BR_TL2", "Bus5", "Bus2", True)
+    c1.add_breaker("BR_TL3", "Bus4", "Bus2", True)
+
+    c1.add_breaker("BR_L1", "L1", "Bus3", True)
+    c1.add_breaker("BR_L2", "L2", "Bus2", True)
 
     c1.calc_ybus()
 
@@ -226,6 +257,17 @@ if __name__ == "__main__":
             print(f"ΔQ at {bus.name}: {mismatch[index]:.6f}")
             index += 1
 
+    c1.breakers["BR_T2"].open()
+    c1.calc_ybus()
+
+    print("Ybus:\n")
+    print(c1.ybus)
+
+    c1.breakers["BR_T2"].close()
+    c1.calc_ybus()
+
+    print("Ybus:\n")
+    print(c1.ybus)
 
     """
     # After one iteration
