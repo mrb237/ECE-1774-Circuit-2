@@ -132,6 +132,7 @@ class Circuit:
 
     def compute_power_mismatch(self):
         power_mismatches = []
+        reactive_mismatches = []
 
         for bus in self.buses.values():
             if bus.bus_type == "Slack":
@@ -156,9 +157,9 @@ class Circuit:
 
             if bus.bus_type == "PQ":
                 delta_Q = Qspec - Qcalc
-                power_mismatches.append(delta_Q)
-            test = np.array(power_mismatches)
-        return np.array(power_mismatches)
+                reactive_mismatches.append(delta_Q)
+            #test = np.array(power_mismatches + reactive_mismatches)
+        return np.array(power_mismatches + reactive_mismatches)
 
 
 if __name__ == "__main__":
