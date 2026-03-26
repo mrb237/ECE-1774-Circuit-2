@@ -118,10 +118,10 @@ class Circuit:
             self.ybus[j, j] += (Yprim_tl.iloc[1, 1])
         # Converting an array to a Dataframe matrix
 
-        ybus_rounded = self.ybus.round(2)
-        self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
+        # ybus_rounded = self.ybus.round(2)
+        # self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
-        # self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
+        self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
 
     def compute_power_injection(self, bus):
         # Bus indecies
@@ -166,12 +166,15 @@ class Circuit:
 
             for gen in self.generators.values():
                 if gen.bus1_name == bus.name:
-                    Pspec += gen.p
+                    if self.is_connection_closed(gen.name, bus.name):
+                        Pspec += gen.p
 
             for load in self.loads.values():
                 if load.bus1_name == bus.name:
-                    Pspec -= load.p
-                    Qspec -= load.q
+                    if self.is_connection_closed(load.name, bus.name):
+                        Pspec -= load.p
+                        Qspec -= load.q
+
             if bus.bus_type == "PQ" or bus.bus_type == "PV":
                 delta_P = Pspec - Pcalc
                 power_mismatches.append(delta_P)

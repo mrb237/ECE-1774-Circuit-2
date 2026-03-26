@@ -10,7 +10,7 @@ class PowerFlow:
         self.max_iter = 50
 
 
-    def solve(self, tol, max_iter):
+    def solve(self, tol=0.001, max_iter=50):
         self.circuit.calc_ybus()
         jacobian_obj = Jacobian(self.circuit)
         self.converged = False
