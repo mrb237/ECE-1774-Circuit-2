@@ -7,7 +7,7 @@ class PowerFlow:
         self.circuit = circuit
         self.jacobian = jacobian
         self.tol = 0.001
-        self.max_iter = 10
+        self.max_iter = 50
 
 
     def solve(self, tol, max_iter):
