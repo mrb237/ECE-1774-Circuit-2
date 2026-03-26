@@ -123,7 +123,7 @@ class SystemTest:
     # ---------------------------------------------------------
     # TEST METHODS
     # ---------------------------------------------------------
-    def test_ybus(self, decimals=4):
+    def test_ybus(self, decimals=2):
         self.circuit.calc_ybus()
         print("\nYbus Matrix:")
         print(self.circuit.ybus.round(decimals))

@@ -11,6 +11,7 @@ class PowerFlow:
 
 
     def solve(self, tol=0.001, max_iter=50):
+        self.circuit.update_generator()
         self.circuit.calc_ybus()
         jacobian_obj = Jacobian(self.circuit)
         self.converged = False
