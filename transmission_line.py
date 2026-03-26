@@ -20,7 +20,7 @@ class TransmissionLine:
         y_prim = [ [(self.Yseries + (self.Yshunt/2)), (-self.Yseries)], [(-self.Yseries), (self.Yseries + (self.Yshunt/2))]]
 
         row_labels = [self.bus1_name, self.bus2_name]
-        col_labels = [self.bus1_name, self.bus1_name]
+        col_labels = [self.bus1_name, self.bus2_name]
 
         y_prim_df = pd.DataFrame(y_prim, index=row_labels, columns=col_labels)
 
