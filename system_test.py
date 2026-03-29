@@ -2,6 +2,7 @@ from bus import Bus
 from circuit import Circuit
 from jacobian import Jacobian, JacobianFormatter
 from power_flow import PowerFlow
+from settings import SETTINGS
 import numpy as np
 
 
@@ -73,10 +74,10 @@ class SystemTest:
     # ---------------------------------------------------------
     def reset_default_model(self):
         # Default loads
-        self.circuit.loads["L1"].p = 80.0
-        self.circuit.loads["L1"].q = 40.0
-        self.circuit.loads["L2"].p = 800.0
-        self.circuit.loads["L2"].q = 280.0
+        self.circuit.loads["L1"].p = 80.0/SETTINGS.sbase
+        self.circuit.loads["L1"].q = 40.0/SETTINGS.sbase
+        self.circuit.loads["L2"].p = 800.0/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 280.0/SETTINGS.sbase
 
         # Default bus roles
         self.circuit.buses["Bus1"].bus_type = "Slack"
@@ -197,8 +198,8 @@ class SystemTest:
         self.circuit.buses["Bus5"].delta = 3.08
 
         # Match PowerWorld Bus 2 load
-        self.circuit.loads["L2"].p = 145.12
-        self.circuit.loads["L2"].q = 50.79
+        self.circuit.loads["L2"].p = 145.12/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 50.79/SETTINGS.sbase
 
     def apply_tl2_open_before_start_state(self):
         self.reset_default_model()
@@ -218,8 +219,8 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 1.00943
         self.circuit.buses["Bus5"].delta = -4.33
 
-        self.circuit.loads["L2"].p = 800.0
-        self.circuit.loads["L2"].q = 280.0
+        self.circuit.loads["L2"].p = 800.0/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 280.0/SETTINGS.sbase
 
     # ---------------------------------------------------------
     # G1 OPEN (Slack generator removed)
@@ -248,8 +249,8 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.82030
         self.circuit.buses["Bus5"].delta = -12.22
 
-        self.circuit.loads["L2"].p = 759.64
-        self.circuit.loads["L2"].q = 265.87
+        self.circuit.loads["L2"].p = 759.64/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 265.87/SETTINGS.sbase
 
     def apply_g1_open_running_state(self):
         self.reset_default_model()
@@ -270,8 +271,8 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.82034
         self.circuit.buses["Bus5"].delta = -12.82
 
-        self.circuit.loads["L2"].p = 759.70
-        self.circuit.loads["L2"].q = 265.90
+        self.circuit.loads["L2"].p = 759.70/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 265.90/SETTINGS.sbase
 
     # ---------------------------------------------------------
     # G2 OPEN (PV generator removed)
@@ -300,8 +301,8 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.77027
         self.circuit.buses["Bus5"].delta = -9.78
 
-        self.circuit.loads["L2"].p = 573.83
-        self.circuit.loads["L2"].q = 200.84
+        self.circuit.loads["L2"].p = 573.83/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 200.84/SETTINGS.sbase
 
     def apply_g2_open_running_state(self):
         self.reset_default_model()
@@ -322,8 +323,8 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.77026
         self.circuit.buses["Bus5"].delta = -9.78
 
-        self.circuit.loads["L2"].p = 573.79
-        self.circuit.loads["L2"].q = 200.83
+        self.circuit.loads["L2"].p = 573.79/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 200.83/SETTINGS.sbase
 
     # ---------------------------------------------------------
     # L2 OPEN (load removed)
@@ -346,8 +347,8 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 1.04004
         self.circuit.buses["Bus5"].delta = 4.64
 
-        self.circuit.loads["L2"].p = 0.0
-        self.circuit.loads["L2"].q = 0.0
+        self.circuit.loads["L2"].p = 0.0/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 0.0/SETTINGS.sbase
 
     # ---------------------------------------------------------
     # T2 OPEN REFERENCE ONLY
@@ -382,11 +383,11 @@ class SystemTest:
         self.circuit.buses["Bus5"].delta = -9.01
 
         # Bus 3 load and generation removed
-        self.circuit.loads["L1"].p = 0.0
-        self.circuit.loads["L1"].q = 0.0
+        self.circuit.loads["L1"].p = 0.0/SETTINGS.sbase
+        self.circuit.loads["L1"].q = 0.0/SETTINGS.sbase
 
-        self.circuit.loads["L2"].p = 616.44
-        self.circuit.loads["L2"].q = 215.75
+        self.circuit.loads["L2"].p = 616.44/SETTINGS.sbase
+        self.circuit.loads["L2"].q = 215.75/SETTINGS.sbase
 
     # ---------------------------------------------------------
     # TEST CASES
@@ -581,6 +582,4 @@ class SystemTest:
 
 if __name__ == "__main__":
     tester = SystemTest()
-    # tester.test_base_case()
-    # tester.test_base_case_validation()
     tester.run_all_reference_tests()
