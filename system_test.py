@@ -1,25 +1,11 @@
-import numpy as np
-import pandas as pd
-
 from bus import Bus
 from circuit import Circuit
 from jacobian import Jacobian, JacobianFormatter
 from power_flow import PowerFlow
+import numpy as np
 
 
 class SystemTest:
-    """
-    Reusable test harness for the senior design 5-bus system.
-
-    Supports:
-    - building the default circuit
-    - printing Ybus
-    - printing mismatch vector
-    - printing Jacobian
-    - running Newton-Raphson
-    - testing breaker open/close scenarios
-    """
-
     def __init__(self):
         self.circuit = None
         self.jacobian = None
@@ -56,16 +42,17 @@ class SystemTest:
         c.add_load("L1", "Bus3", 80.0, 40.0)
         c.add_load("L2", "Bus2", 800.0, 280.0)
 
-        # Branch breakers
+        # Breakers
+        c.add_breaker("BR_G1", "G1", "Bus1", True)
+        c.add_breaker("BR_G2", "G2", "Bus3", True)
+
         c.add_breaker("BR_T1", "Bus1", "Bus5", True)
         c.add_breaker("BR_T2", "Bus3", "Bus4", True)
+
         c.add_breaker("BR_TL1", "Bus5", "Bus4", True)
         c.add_breaker("BR_TL2", "Bus5", "Bus2", True)
         c.add_breaker("BR_TL3", "Bus4", "Bus2", True)
 
-        # Optional generator/load breakers (not yet active in mismatch unless you add logic)
-        c.add_breaker("BR_G1", "G1", "Bus1", True)
-        c.add_breaker("BR_G2", "G2", "Bus3", True)
         c.add_breaker("BR_L1", "L1", "Bus3", True)
         c.add_breaker("BR_L2", "L2", "Bus2", True)
 
@@ -82,9 +69,23 @@ class SystemTest:
         self.power_flow = PowerFlow(self.circuit, self.jacobian)
 
     # ---------------------------------------------------------
+    # RESET MODEL TO DEFAULT POWER VALUES / BUS TYPES
+    # ---------------------------------------------------------
+    def reset_default_model(self):
+        # Default loads
+        self.circuit.loads["L1"].p = 80.0
+        self.circuit.loads["L1"].q = 40.0
+        self.circuit.loads["L2"].p = 800.0
+        self.circuit.loads["L2"].q = 280.0
+
+        # Default bus roles
+        self.circuit.buses["Bus1"].bus_type = "Slack"
+        self.circuit.buses["Bus3"].bus_type = "PV"
+
+    # ---------------------------------------------------------
     # BREAKER CONTROL
     # ---------------------------------------------------------
-    def set_breaker(self, breaker_name: str, closed: bool):
+    def set_breaker(self, breaker_name, closed):
         if breaker_name not in self.circuit.breakers:
             raise KeyError(f"Breaker '{breaker_name}' not found.")
 
@@ -102,55 +103,35 @@ class SystemTest:
             print(f"  {name}: {state}")
 
     # ---------------------------------------------------------
-    # OPTIONAL: APPLY A KNOWN CONVERGED STATE
+    # DISPLAY HELPERS
     # ---------------------------------------------------------
-    def apply_known_converged_state(self):
-        self.circuit.buses["Bus1"].vpu = 1.0000000000
-        self.circuit.buses["Bus1"].delta = 0.00
-
-        self.circuit.buses["Bus2"].vpu = 0.8337700000000000
-        self.circuit.buses["Bus2"].delta = -22.4064031191349180
-
-        self.circuit.buses["Bus3"].vpu = 1.0499999812655256
-        self.circuit.buses["Bus3"].delta = -0.5973411159680668
-
-        self.circuit.buses["Bus4"].vpu = 1.0193023987537509
-        self.circuit.buses["Bus4"].delta = -2.8339706604176557
-
-        self.circuit.buses["Bus5"].vpu = 0.9742886948445556
-        self.circuit.buses["Bus5"].delta = -4.5478833180645389
-
-    # ---------------------------------------------------------
-    # TEST METHODS
-    # ---------------------------------------------------------
-    def test_ybus(self, decimals=2):
-        self.circuit.calc_ybus()
+    def print_ybus(self, decimals=2):
         print("\nYbus Matrix:")
         print(self.circuit.ybus.round(decimals))
-        return self.circuit.ybus
 
-    def test_power_mismatch(self, decimals=6):
+    def print_mismatch(self, decimals=2):
         mismatch = self.circuit.compute_power_mismatch()
 
         print("\nPower Mismatch Vector:")
         print(np.round(mismatch, decimals))
 
         print("\nStructured Mismatch Output:")
-        idx = 0
-        for bus in self.circuit.buses.values():
-            if bus.bus_type == "Slack":
-                continue
 
-            print(f"ΔP at {bus.name}: {mismatch[idx]:.{decimals}f}")
-            idx += 1
+        non_slack_buses = [bus for bus in self.circuit.buses.values() if bus.bus_type != "Slack"]
+        pq_buses = [bus for bus in self.circuit.buses.values() if bus.bus_type == "PQ"]
 
-            if bus.bus_type == "PQ":
-                print(f"ΔQ at {bus.name}: {mismatch[idx]:.{decimals}f}")
-                idx += 1
+        # First all ΔP terms
+        for i, bus in enumerate(non_slack_buses):
+            print(f"ΔP at {bus.name}: {mismatch[i]:.{decimals}f}")
+
+        # Then all ΔQ terms for PQ buses only
+        q_start = len(non_slack_buses)
+        for i, bus in enumerate(pq_buses):
+            print(f"ΔQ at {bus.name}: {mismatch[q_start + i]:.{decimals}f}")
 
         return mismatch
 
-    def test_jacobian(self, decimals=4):
+    def print_jacobian(self, decimals=4):
         self.refresh_objects()
         jacobian_matrix = self.jacobian.calc_jacobian()
 
@@ -158,60 +139,448 @@ class SystemTest:
         formatter = JacobianFormatter(self.jacobian)
         print(formatter.to_dataframe().round(decimals))
 
-        print("\nJacobian Shape:")
-        print(jacobian_matrix.shape)
-
         return jacobian_matrix
 
-    def test_power_flow(self, tol=0.001, max_iter=50):
-        result = self.power_flow.solve(tol=tol, max_iter=max_iter)
-
-        print("\nNewton-Raphson Results:")
+    def print_bus_results(self, result, title="Bus Results"):
+        print(f"\n{title}")
         print(f"Converged: {result['converged']}")
-        print(f"Iterations: {result['iterations']}\n")
+        print(f"Iterations: {result['iterations']}")
 
-        for bus_name, data in result["bus_data"].items():
+        if "error" in result:
+            print(f"Error: {result['error']}")
+
+        print()
+        for bus_name, data in result.get("bus_data", {}).items():
             print(f"{bus_name}:")
             print(f"  Voltage (pu): {data['vpu']:.6f}")
-            print(f"  Angle (deg):  {data['delta']:.6f}\n")
-
-        return result
+            print(f"  Angle (deg):  {data['delta']:.6f}")
+            print()
 
     # ---------------------------------------------------------
-    # CONVENIENCE RUNNERS
+    # APPLY REFERENCE STATES
     # ---------------------------------------------------------
-    def run_base_case(self):
-        print("\n=== BASE CASE ===")
+    def apply_base_case_state(self):
+        self.reset_default_model()
+
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 0.83377
+        self.circuit.buses["Bus2"].delta = -22.4063
+
+        self.circuit.buses["Bus3"].vpu = 1.05000
+        self.circuit.buses["Bus3"].delta = -0.5973
+
+        self.circuit.buses["Bus4"].vpu = 1.01930
+        self.circuit.buses["Bus4"].delta = -2.8340
+
+        self.circuit.buses["Bus5"].vpu = 0.97429
+        self.circuit.buses["Bus5"].delta = -4.5479
+
+    def apply_tl2_open_running_state(self):
+        self.reset_default_model()
+
+        # Match PowerWorld bus values
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 0.19606
+        self.circuit.buses["Bus2"].delta = -47.33
+
+        self.circuit.buses["Bus3"].vpu = 0.91960
+        self.circuit.buses["Bus3"].delta = 10.50
+
+        self.circuit.buses["Bus4"].vpu = 0.87801
+        self.circuit.buses["Bus4"].delta = 7.57
+
+        self.circuit.buses["Bus5"].vpu = 0.94568
+        self.circuit.buses["Bus5"].delta = 3.08
+
+        # Match PowerWorld Bus 2 load
+        self.circuit.loads["L2"].p = 145.12
+        self.circuit.loads["L2"].q = 50.79
+
+    def apply_tl2_open_before_start_state(self):
+        self.reset_default_model()
+
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 1.03630
+        self.circuit.buses["Bus2"].delta = -62.23
+
+        self.circuit.buses["Bus3"].vpu = 1.05729
+        self.circuit.buses["Bus3"].delta = -7.22
+
+        self.circuit.buses["Bus4"].vpu = 1.02216
+        self.circuit.buses["Bus4"].delta = -9.65
+
+        self.circuit.buses["Bus5"].vpu = 1.00943
+        self.circuit.buses["Bus5"].delta = -4.33
+
+        self.circuit.loads["L2"].p = 800.0
+        self.circuit.loads["L2"].q = 280.0
+
+    # ---------------------------------------------------------
+    # G1 OPEN (Slack generator removed)
+    # Bus3 becomes Slack, Bus1 becomes PQ
+    # ---------------------------------------------------------
+    def set_roles_for_g1_open(self):
+        self.circuit.buses["Bus1"].bus_type = "PQ"
+        self.circuit.buses["Bus3"].bus_type = "Slack"
+
+    def apply_g1_open_before_start_state(self):
+        self.reset_default_model()
+        self.set_roles_for_g1_open()
+
+        self.circuit.buses["Bus1"].vpu = 0.82030
+        self.circuit.buses["Bus1"].delta = -12.22
+
+        self.circuit.buses["Bus2"].vpu = 0.59905
+        self.circuit.buses["Bus2"].delta = -37.81
+
+        self.circuit.buses["Bus3"].vpu = 1.05000
+        self.circuit.buses["Bus3"].delta = 0.00
+
+        self.circuit.buses["Bus4"].vpu = 0.95573
+        self.circuit.buses["Bus4"].delta = -4.37
+
+        self.circuit.buses["Bus5"].vpu = 0.82030
+        self.circuit.buses["Bus5"].delta = -12.22
+
+        self.circuit.loads["L2"].p = 759.64
+        self.circuit.loads["L2"].q = 265.87
+
+    def apply_g1_open_running_state(self):
+        self.reset_default_model()
+        self.set_roles_for_g1_open()
+
+        self.circuit.buses["Bus1"].vpu = 0.82034
+        self.circuit.buses["Bus1"].delta = -12.82
+
+        self.circuit.buses["Bus2"].vpu = 0.59912
+        self.circuit.buses["Bus2"].delta = -38.40
+
+        self.circuit.buses["Bus3"].vpu = 1.05000
+        self.circuit.buses["Bus3"].delta = -0.60
+
+        self.circuit.buses["Bus4"].vpu = 0.95575
+        self.circuit.buses["Bus4"].delta = -4.97
+
+        self.circuit.buses["Bus5"].vpu = 0.82034
+        self.circuit.buses["Bus5"].delta = -12.82
+
+        self.circuit.loads["L2"].p = 759.70
+        self.circuit.loads["L2"].q = 265.90
+
+    # ---------------------------------------------------------
+    # G2 OPEN (PV generator removed)
+    # Bus1 remains Slack, Bus3 becomes PQ
+    # ---------------------------------------------------------
+    def set_roles_for_g2_open(self):
+        self.circuit.buses["Bus1"].bus_type = "Slack"
+        self.circuit.buses["Bus3"].bus_type = "PQ"
+
+    def apply_g2_open_before_start_state(self):
+        self.reset_default_model()
+        self.set_roles_for_g2_open()
+
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 0.45017
+        self.circuit.buses["Bus2"].delta = -45.52
+
+        self.circuit.buses["Bus3"].vpu = 0.68492
+        self.circuit.buses["Bus3"].delta = -17.01
+
+        self.circuit.buses["Bus4"].vpu = 0.69172
+        self.circuit.buses["Bus4"].delta = -16.08
+
+        self.circuit.buses["Bus5"].vpu = 0.77027
+        self.circuit.buses["Bus5"].delta = -9.78
+
+        self.circuit.loads["L2"].p = 573.83
+        self.circuit.loads["L2"].q = 200.84
+
+    def apply_g2_open_running_state(self):
+        self.reset_default_model()
+        self.set_roles_for_g2_open()
+
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 0.45015
+        self.circuit.buses["Bus2"].delta = -45.52
+
+        self.circuit.buses["Bus3"].vpu = 0.68490
+        self.circuit.buses["Bus3"].delta = -17.01
+
+        self.circuit.buses["Bus4"].vpu = 0.69170
+        self.circuit.buses["Bus4"].delta = -16.08
+
+        self.circuit.buses["Bus5"].vpu = 0.77026
+        self.circuit.buses["Bus5"].delta = -9.78
+
+        self.circuit.loads["L2"].p = 573.79
+        self.circuit.loads["L2"].q = 200.83
+
+    # ---------------------------------------------------------
+    # L2 OPEN (load removed)
+    # ---------------------------------------------------------
+    def apply_l2_open_state(self):
+        self.reset_default_model()
+
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 1.09201
+        self.circuit.buses["Bus2"].delta = 6.02
+
+        self.circuit.buses["Bus3"].vpu = 1.05000
+        self.circuit.buses["Bus3"].delta = 11.76
+
+        self.circuit.buses["Bus4"].vpu = 1.05649
+        self.circuit.buses["Bus4"].delta = 9.45
+
+        self.circuit.buses["Bus5"].vpu = 1.04004
+        self.circuit.buses["Bus5"].delta = 4.64
+
+        self.circuit.loads["L2"].p = 0.0
+        self.circuit.loads["L2"].q = 0.0
+
+    # ---------------------------------------------------------
+    # T2 OPEN REFERENCE ONLY
+    # This creates an islanded / removed Bus 3 in PowerWorld.
+    # Your current solver likely does not fully support removing
+    # that bus from the active NR system, so this is best handled
+    # as a reference / reporting case for now.
+    # ---------------------------------------------------------
+    def apply_t2_open_state(self):
+        self.reset_default_model()
+
+        # Bus 3 removed / isolated in PowerWorld
+        # We mimic that by opening the transformer, generator, and load
+        # connected to Bus 3.
+        self.set_breaker("BR_T2", False)
+        self.set_breaker("BR_G2", False)
+        self.set_breaker("BR_L1", False)
+
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 0.47739
+        self.circuit.buses["Bus2"].delta = -43.36
+
+        self.circuit.buses["Bus3"].vpu = 0.00000
+        self.circuit.buses["Bus3"].delta = 0.00
+
+        self.circuit.buses["Bus4"].vpu = 0.72936
+        self.circuit.buses["Bus4"].delta = -13.46
+
+        self.circuit.buses["Bus5"].vpu = 0.79093
+        self.circuit.buses["Bus5"].delta = -9.01
+
+        # Bus 3 load and generation removed
+        self.circuit.loads["L1"].p = 0.0
+        self.circuit.loads["L1"].q = 0.0
+
+        self.circuit.loads["L2"].p = 616.44
+        self.circuit.loads["L2"].q = 215.75
+
+    # ---------------------------------------------------------
+    # TEST CASES
+    # ---------------------------------------------------------
+    def test_base_case(self):
+        print("\n===================================================")
+        print("CASE 0: BASE CASE")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.reset_default_model()
         self.print_breaker_states()
-        self.test_ybus()
-        self.test_power_mismatch()
-        self.test_jacobian()
-        self.test_power_flow()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
 
-    def run_converged_state_check(self):
-        print("\n=== KNOWN CONVERGED STATE CHECK ===")
-        self.apply_known_converged_state()
-        self.test_power_mismatch()
-        self.test_jacobian()
+        result = self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+        self.print_bus_results(result, title="Base Case Results")
 
-    def run_breaker_scenario(self, breaker_name, closed):
-        print(f"\n=== BREAKER SCENARIO: {breaker_name} -> {'Closed' if closed else 'Open'} ===")
-        self.set_breaker(breaker_name, closed)
+    def test_base_case_validation(self):
+        print("\n===================================================")
+        print("CASE 0A: BASE CASE VALIDATION")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.apply_base_case_state()
         self.print_breaker_states()
-        self.test_ybus()
-        self.test_power_mismatch()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
 
-        try:
-            self.test_jacobian()
-            self.test_power_flow()
-        except Exception as e:
-            print(f"\nPower flow failed for this scenario: {e}")
+    def test_tl2_open_running(self):
+        print("\n===================================================")
+        print("CASE 1: TL2 OPEN WHILE RUNNING")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+
+        self.set_breaker("BR_TL2", False)
+        self.apply_tl2_open_running_state()
+
+        self.print_breaker_states()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+
+    def test_tl2_open_before_start(self):
+        print("\n===================================================")
+        print("CASE 2: TL2 OPEN BEFORE START")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.set_breaker("BR_TL2", False)
+
+        self.print_breaker_states()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+
+        result = self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+        self.print_bus_results(result, title="TL2 Open Before Start Results")
+
+    def test_g1_open_running(self):
+        print("\n===================================================")
+        print("CASE 3: G1 (SLACK) OPEN WHILE RUNNING")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+
+        self.set_breaker("BR_G1", False)
+        self.apply_g1_open_running_state()
+
+        self.print_breaker_states()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+
+    def test_g1_open_before_start(self):
+        print("\n===================================================")
+        print("CASE 4: G1 (SLACK) OPEN BEFORE START")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.set_breaker("BR_G1", False)
+        self.apply_g1_open_before_start_state()
+
+        self.print_breaker_states()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+
+    def test_g2_open_running(self):
+        print("\n===================================================")
+        print("CASE 5: G2 (PV) OPEN WHILE RUNNING")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+
+        self.set_breaker("BR_G2", False)
+        self.apply_g2_open_running_state()
+
+        self.print_breaker_states()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+
+    def test_g2_open_before_start(self):
+        print("\n===================================================")
+        print("CASE 6: G2 (PV) OPEN BEFORE START")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.set_breaker("BR_G2", False)
+        self.apply_g2_open_before_start_state()
+
+        self.print_breaker_states()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+
+    def test_l2_open_running(self):
+        print("\n===================================================")
+        print("CASE 7: L2 OPEN WHILE RUNNING")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+
+        self.set_breaker("BR_L2", False)
+        self.apply_l2_open_state()
+
+        self.print_breaker_states()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+
+    def test_l2_open_before_start(self):
+        print("\n===================================================")
+        print("CASE 8: L2 OPEN BEFORE START")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.set_breaker("BR_L2", False)
+        self.apply_l2_open_state()
+
+        self.print_breaker_states()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+
+    def test_t2_open_reference(self):
+        print("\n===================================================")
+        print("CASE 9: T2 OPEN REFERENCE CASE")
+        print("===================================================")
+        print("NOTE: Bus 3 is islanded / removed in this PowerWorld case.")
+        print("This is currently treated as a reference state only.")
+
+        self.build_default_circuit()
+        self.apply_t2_open_state()
+
+        self.print_breaker_states()
+        self.print_ybus()
+
+        print("\nReference bus values for T2-open case applied.")
+        print("Mismatch / Jacobian comparison may not be meaningful until")
+        print("the solver supports removing islanded buses from the active system.")
+
+    # ---------------------------------------------------------
+    # RUN ALL
+    # ---------------------------------------------------------
+    def run_all_reference_tests(self):
+        self.test_base_case()
+        self.test_base_case_validation()
+
+        self.test_tl2_open_running()
+        self.test_tl2_open_before_start()
+
+        self.test_g1_open_running()
+        self.test_g1_open_before_start()
+
+        self.test_g2_open_running()
+        self.test_g2_open_before_start()
+
+        self.test_l2_open_running()
+        self.test_l2_open_before_start()
+
+        self.test_t2_open_reference()
 
 
 if __name__ == "__main__":
     tester = SystemTest()
-    tester.build_default_circuit()
-
-    tester.run_base_case()
-    tester.run_converged_state_check()
-    tester.run_breaker_scenario("BR_TL2", False)
+    # tester.test_base_case()
+    # tester.test_base_case_validation()
+    tester.run_all_reference_tests()
