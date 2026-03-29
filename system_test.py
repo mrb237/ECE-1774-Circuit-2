@@ -65,19 +65,28 @@ class SystemTest:
     # REFRESH SOLVER OBJECTS
     # ---------------------------------------------------------
     def refresh_objects(self):
+        self.circuit.update_generator()
         self.circuit.calc_ybus()
         self.jacobian = Jacobian(self.circuit)
         self.power_flow = PowerFlow(self.circuit, self.jacobian)
+
+    # ---------------------------------------------------------
+    # LOAD HELPER
+    # ---------------------------------------------------------
+    def set_load(self, load_name, mw, mvar):
+        load = self.circuit.loads[load_name]
+        load.mw = mw
+        load.mvar = mvar
+        load.p = mw / SETTINGS.sbase
+        load.q = mvar / SETTINGS.sbase
 
     # ---------------------------------------------------------
     # RESET MODEL TO DEFAULT POWER VALUES / BUS TYPES
     # ---------------------------------------------------------
     def reset_default_model(self):
         # Default loads
-        self.circuit.loads["L1"].p = 80.0/SETTINGS.sbase
-        self.circuit.loads["L1"].q = 40.0/SETTINGS.sbase
-        self.circuit.loads["L2"].p = 800.0/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 280.0/SETTINGS.sbase
+        self.set_load("L1", 80.0, 40.0)
+        self.set_load("L2", 800.0, 280.0)
 
         # Default bus roles
         self.circuit.buses["Bus1"].bus_type = "Slack"
@@ -102,6 +111,19 @@ class SystemTest:
         for name, br in self.circuit.breakers.items():
             state = "Closed" if br.is_closed else "Open"
             print(f"  {name}: {state}")
+
+    # ---------------------------------------------------------
+    # SAFE SOLVER CALL
+    # ---------------------------------------------------------
+    def safe_solve(self, title="Solve Results", flat_start=True):
+        try:
+            result = self.power_flow.solve(tol=0.001, max_iter=50, flat_start=flat_start)
+            self.print_bus_results(result, title=title)
+            return result
+        except ValueError as e:
+            print(f"\n{title}")
+            print(f"Solve failed: {e}")
+            return None
 
     # ---------------------------------------------------------
     # DISPLAY HELPERS
@@ -132,7 +154,7 @@ class SystemTest:
 
         return mismatch
 
-    def print_jacobian(self, decimals=4):
+    def print_jacobian(self, decimals=2):
         self.refresh_objects()
         jacobian_matrix = self.jacobian.calc_jacobian()
 
@@ -198,8 +220,7 @@ class SystemTest:
         self.circuit.buses["Bus5"].delta = 3.08
 
         # Match PowerWorld Bus 2 load
-        self.circuit.loads["L2"].p = 145.12/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 50.79/SETTINGS.sbase
+        self.set_load("L2", 145.12, 50.79)
 
     def apply_tl2_open_before_start_state(self):
         self.reset_default_model()
@@ -219,8 +240,7 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 1.00943
         self.circuit.buses["Bus5"].delta = -4.33
 
-        self.circuit.loads["L2"].p = 800.0/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 280.0/SETTINGS.sbase
+        self.set_load("L2", 800.0, 280.0)
 
     # ---------------------------------------------------------
     # G1 OPEN (Slack generator removed)
@@ -249,8 +269,7 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.82030
         self.circuit.buses["Bus5"].delta = -12.22
 
-        self.circuit.loads["L2"].p = 759.64/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 265.87/SETTINGS.sbase
+        self.set_load("L2", 759.64, 265.87)
 
     def apply_g1_open_running_state(self):
         self.reset_default_model()
@@ -271,8 +290,7 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.82034
         self.circuit.buses["Bus5"].delta = -12.82
 
-        self.circuit.loads["L2"].p = 759.70/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 265.90/SETTINGS.sbase
+        self.set_load("L2", 759.70, 265.90)
 
     # ---------------------------------------------------------
     # G2 OPEN (PV generator removed)
@@ -301,8 +319,7 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.77027
         self.circuit.buses["Bus5"].delta = -9.78
 
-        self.circuit.loads["L2"].p = 573.83/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 200.84/SETTINGS.sbase
+        self.set_load("L2", 573.83, 200.84)
 
     def apply_g2_open_running_state(self):
         self.reset_default_model()
@@ -323,8 +340,7 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.77026
         self.circuit.buses["Bus5"].delta = -9.78
 
-        self.circuit.loads["L2"].p = 573.79/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 200.83/SETTINGS.sbase
+        self.set_load("L2", 573.79, 200.83)
 
     # ---------------------------------------------------------
     # L2 OPEN (load removed)
@@ -347,8 +363,7 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 1.04004
         self.circuit.buses["Bus5"].delta = 4.64
 
-        self.circuit.loads["L2"].p = 0.0/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 0.0/SETTINGS.sbase
+        self.set_load("L2", 0.0, 0.0)
 
     # ---------------------------------------------------------
     # T2 OPEN REFERENCE ONLY
@@ -383,11 +398,8 @@ class SystemTest:
         self.circuit.buses["Bus5"].delta = -9.01
 
         # Bus 3 load and generation removed
-        self.circuit.loads["L1"].p = 0.0/SETTINGS.sbase
-        self.circuit.loads["L1"].q = 0.0/SETTINGS.sbase
-
-        self.circuit.loads["L2"].p = 616.44/SETTINGS.sbase
-        self.circuit.loads["L2"].q = 215.75/SETTINGS.sbase
+        self.set_load("L1", 0.0, 0.0)
+        self.set_load("L2", 616.44, 215.75)
 
     # ---------------------------------------------------------
     # TEST CASES
@@ -404,8 +416,7 @@ class SystemTest:
         self.print_mismatch()
         self.print_jacobian()
 
-        result = self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
-        self.print_bus_results(result, title="Base Case Results")
+        self.safe_solve(title="Base Case Results", flat_start=True)
 
     def test_base_case_validation(self):
         print("\n===================================================")
@@ -425,7 +436,9 @@ class SystemTest:
         print("===================================================")
 
         self.build_default_circuit()
-        self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+        base_result = self.safe_solve(title="Base Solve Before TL2 Open", flat_start=True)
+        if base_result is None:
+            return
 
         self.set_breaker("BR_TL2", False)
         self.apply_tl2_open_running_state()
@@ -448,8 +461,7 @@ class SystemTest:
         self.print_mismatch()
         self.print_jacobian()
 
-        result = self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
-        self.print_bus_results(result, title="TL2 Open Before Start Results")
+        self.safe_solve(title="TL2 Open Before Start Results", flat_start=True)
 
     def test_g1_open_running(self):
         print("\n===================================================")
@@ -457,7 +469,9 @@ class SystemTest:
         print("===================================================")
 
         self.build_default_circuit()
-        self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+        base_result = self.safe_solve(title="Base Solve Before G1 Open", flat_start=True)
+        if base_result is None:
+            return
 
         self.set_breaker("BR_G1", False)
         self.apply_g1_open_running_state()
@@ -487,7 +501,9 @@ class SystemTest:
         print("===================================================")
 
         self.build_default_circuit()
-        self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+        base_result = self.safe_solve(title="Base Solve Before G2 Open", flat_start=True)
+        if base_result is None:
+            return
 
         self.set_breaker("BR_G2", False)
         self.apply_g2_open_running_state()
@@ -517,7 +533,9 @@ class SystemTest:
         print("===================================================")
 
         self.build_default_circuit()
-        self.power_flow.solve(tol=0.001, max_iter=50, flat_start=True)
+        base_result = self.safe_solve(title="Base Solve Before L2 Open", flat_start=True)
+        if base_result is None:
+            return
 
         self.set_breaker("BR_L2", False)
         self.apply_l2_open_state()
