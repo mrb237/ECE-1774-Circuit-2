@@ -7,27 +7,29 @@ class PowerFlow:
         self.circuit = circuit
         self.jacobian = jacobian
         self.tol = 0.001
-        self.max_iter = 10
+        self.max_iter = 50
 
 
-    def solve(self, tol, max_iter):
+    def solve(self, tol=0.001, max_iter=50, flat_start=True):
+        self.circuit.update_generator()
         self.circuit.calc_ybus()
         jacobian_obj = Jacobian(self.circuit)
         self.converged = False
         self.iteration = 0
 
-        # flat start initialization
-        for bus in self.circuit.buses.values():
-            if bus.bus_type == "Slack":
-                continue
-            elif bus.bus_type == "PV":
-                bus.delta = 0.0
-                for gen in self.circuit.generators.values():
-                    if gen.bus1_name == bus.name:
-                        bus.vpu = gen.voltage_setpoint
-            elif bus.bus_type == "PQ":
-                bus.vpu = 1.0
-                bus.delta = 0.0
+        if flat_start:
+            # flat start initialization
+            for bus in self.circuit.buses.values():
+                if bus.bus_type == "Slack":
+                    continue
+                elif bus.bus_type == "PV":
+                    bus.delta = 0.0
+                    for gen in self.circuit.generators.values():
+                        if gen.bus1_name == bus.name:
+                            bus.vpu = gen.voltage_setpoint
+                elif bus.bus_type == "PQ":
+                    bus.vpu = 1.0
+                    bus.delta = 0.0
 
         # Newton-Raphson iteration loop
         for self.iteration in range(1, max_iter + 1):
