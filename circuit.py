@@ -196,10 +196,12 @@ class Circuit:
         return P_i, Q_i
 
     def compute_power_mismatch(self):
+        self.ordered_buses = sorted(self.buses.values(), key=lambda bus: bus.bus_index)
+
         power_mismatches = []
         reactive_mismatches = []
 
-        for bus in self.buses.values():
+        for bus in self.ordered_buses:
             if bus.bus_type == "Slack":
                 continue
 

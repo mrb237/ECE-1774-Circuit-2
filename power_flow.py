@@ -13,7 +13,6 @@ class PowerFlow:
     def solve(self, tol=0.001, max_iter=50, flat_start=True):
         self.circuit.update_generator()
         self.circuit.calc_ybus()
-        jacobian_obj = Jacobian(self.circuit)
         self.converged = False
         self.iteration = 0
 
@@ -30,6 +29,8 @@ class PowerFlow:
                 elif bus.bus_type == "PQ":
                     bus.vpu = 1.0
                     bus.delta = 0.0
+
+        jacobian_obj = Jacobian(self.circuit)
 
         # Newton-Raphson iteration loop
         for self.iteration in range(1, max_iter + 1):
