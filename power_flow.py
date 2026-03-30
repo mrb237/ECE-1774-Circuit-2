@@ -13,6 +13,7 @@ class PowerFlow:
     def solve(self, tol=0.001, max_iter=50, flat_start=True):
         self.circuit.update_generator()
         self.circuit.calc_ybus()
+        self.circuit.zero_islanded_buses()
         self.converged = False
         self.iteration = 0
 

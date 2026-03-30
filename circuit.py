@@ -113,6 +113,80 @@ class Circuit:
         else:
             raise ValueError("Both generators are disconnected. No Slack bus available.")
 
+    def build_adjacency_list(self):
+        """
+        Build an adjacency list of bus-to-bus connectivity using only
+        CLOSED transformers and transmission lines.
+        """
+        adjacency = {bus_name: [] for bus_name in self.buses.keys()}
+
+        # Transformers
+        for tf in self.transformers.values():
+            if self.is_connection_closed(tf.bus1_name, tf.bus2_name):
+                adjacency[tf.bus1_name].append(tf.bus2_name)
+                adjacency[tf.bus2_name].append(tf.bus1_name)
+
+        # Transmission lines
+        for tl in self.transmission_lines.values():
+            if self.is_connection_closed(tl.bus1_name, tl.bus2_name):
+                adjacency[tl.bus1_name].append(tl.bus2_name)
+                adjacency[tl.bus2_name].append(tl.bus1_name)
+
+        return adjacency
+
+    def get_slack_bus_name(self):
+        """
+        Return the current slack bus name.
+        """
+        for bus in self.buses.values():
+            if bus.bus_type == "Slack":
+                return bus.name
+        return None
+
+    def get_active_bus_names(self):
+        """
+        Return the set of buses reachable from the current Slack bus
+        using DFS on the adjacency list.
+        """
+        slack_bus = self.get_slack_bus_name()
+        if slack_bus is None:
+            return set()
+
+        adjacency = self.build_adjacency_list()
+
+        visited = set()
+        stack = [slack_bus]
+
+        while stack:
+            current = stack.pop()
+            if current in visited:
+                continue
+
+            visited.add(current)
+
+            for neighbor in adjacency[current]:
+                if neighbor not in visited:
+                    stack.append(neighbor)
+
+        return visited
+
+    def get_islanded_bus_names(self):
+        """
+        Return the set of buses that are NOT connected to the slack bus.
+        """
+        active_buses = self.get_active_bus_names()
+        return set(self.buses.keys()) - active_buses
+
+    def zero_islanded_buses(self):
+        """
+        Set islanded buses to zero voltage and zero angle for reporting / display.
+        """
+        islanded_buses = self.get_islanded_bus_names()
+
+        for bus_name in islanded_buses:
+            self.buses[bus_name].vpu = 0.0
+            self.buses[bus_name].delta = 0.0
+
     # Adding Methods
     def calc_ybus(self):
         # Stores amount of buses are in the dictionary
@@ -201,7 +275,12 @@ class Circuit:
         power_mismatches = []
         reactive_mismatches = []
 
+        active_buses = self.get_active_bus_names()
+
         for bus in self.ordered_buses:
+            if bus.name not in active_buses:
+                continue
+
             if bus.bus_type == "Slack":
                 continue
 

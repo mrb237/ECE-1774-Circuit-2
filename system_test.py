@@ -140,8 +140,17 @@ class SystemTest:
 
         print("\nStructured Mismatch Output:")
 
-        non_slack_buses = [bus for bus in self.circuit.buses.values() if bus.bus_type != "Slack"]
-        pq_buses = [bus for bus in self.circuit.buses.values() if bus.bus_type == "PQ"]
+        active_buses = self.circuit.get_active_bus_names()
+
+        non_slack_buses = [
+            bus for bus in self.circuit.buses.values()
+            if bus.name in active_buses and bus.bus_type != "Slack"
+        ]
+
+        pq_buses = [
+            bus for bus in self.circuit.buses.values()
+            if bus.name in active_buses and bus.bus_type != "PQ"
+        ]
 
         # First all ΔP terms
         for i, bus in enumerate(non_slack_buses):
