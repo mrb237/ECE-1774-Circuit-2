@@ -1,6 +1,7 @@
 import numpy as np
 from circuit import Circuit
 from jacobian import Jacobian
+from settings import Settings
 
 class PowerFlow:
     def __init__(self, circuit: Circuit, jacobian: Jacobian):
@@ -70,11 +71,171 @@ class PowerFlow:
             }
         }
 
+    def compute_power_flow_direction(self, settings: Settings):
+        flow_results_tl_tf = {}
+        flow_results_g_l = {}
+
+        # ---------- transmission line flows ----------
+        for line_name, line in self.circuit.transmission_lines.items():
+            bus1 = self.circuit.buses[line.bus1_name]
+            bus2 = self.circuit.buses[line.bus2_name]
+
+            # complex bus voltages
+            V1 = bus1.vpu * np.exp(1j * np.deg2rad(bus1.delta))
+            V2 = bus2.vpu * np.exp(1j * np.deg2rad(bus2.delta))
+
+            # currents using pi-model
+            I12 = (V1 - V2) * line.Yseries + V1 * (line.Yshunt / 2)
+            I21 = (V2 - V1) * line.Yseries + V2 * (line.Yshunt / 2)
+
+            # complex powers
+            S12 = V1 * np.conj(I12)
+            S21 = V2 * np.conj(I21)
+
+            P12 = S12.real
+            Q12 = S12.imag
+            P21 = S21.real
+            Q21 = S21.imag
+
+            Ploss = P12 + P21
+            Qloss = Q12 + Q21
+
+            # determine displayed direction from real power
+            if P12 >= 0:
+                direction = f"{bus1.name} -> {bus2.name}"
+                display_mw = P12 * settings.sbase
+                display_mvar = Q12 * settings.sbase
+            else:
+                direction = f"{bus2.name} -> {bus1.name}"
+                display_mw = abs(P12) * settings.sbase
+                display_mvar = abs(Q12) * settings.sbase
+
+            flow_results_tl_tf[line_name] = {
+                "type": "Transmission Line",
+                "from_bus": bus1.name,
+                "to_bus": bus2.name,
+                "P12_MW": P12 * settings.sbase,
+                "Q12_MVAR": Q12 * settings.sbase,
+                "P21_MW": P21 * settings.sbase,
+                "Q21_MVAR": Q21 * settings.sbase,
+                "Ploss_MW": Ploss * settings.sbase,
+                "Qloss_MVAR": Qloss * settings.sbase,
+                "direction": direction,
+                "display_MW": display_mw,
+                "display_MVAR": display_mvar
+            }
+
+        # ---------- transformer flows ----------
+        for transformer_name, transformer in self.circuit.transformers.items():
+            bus1 = self.circuit.buses[transformer.bus1_name]
+            bus2 = self.circuit.buses[transformer.bus2_name]
+
+            V1 = bus1.vpu * np.exp(1j * np.deg2rad(bus1.delta))
+            V2 = bus2.vpu * np.exp(1j * np.deg2rad(bus2.delta))
+
+            # transformer current, no shunt branch
+            I12 = (V1 - V2) * transformer.Yseries
+            I21 = (V2 - V1) * transformer.Yseries
+
+            S12 = V1 * np.conj(I12)
+            S21 = V2 * np.conj(I21)
+
+            P12 = S12.real
+            Q12 = S12.imag
+            P21 = S21.real
+            Q21 = S21.imag
+
+            Ploss = P12 + P21
+            Qloss = Q12 + Q21
+
+            if P12 >= 0:
+                direction = f"{bus1.name} -> {bus2.name}"
+                display_mw = P12 * settings.sbase
+                display_mvar = Q12 * settings.sbase
+            else:
+                direction = f"{bus2.name} -> {bus1.name}"
+                display_mw = abs(P12) * settings.sbase
+                display_mvar = abs(Q12) * settings.sbase
+
+            flow_results_tl_tf[transformer_name] = {
+                "type": "Transformer",
+                "from_bus": bus1.name,
+                "to_bus": bus2.name,
+                "P12_MW": P12 * settings.sbase,
+                "Q12_MVAR": Q12 * settings.sbase,
+                "P21_MW": P21 * settings.sbase,
+                "Q21_MVAR": Q21 * settings.sbase,
+                "Ploss_MW": Ploss * settings.sbase,
+                "Qloss_MVAR": Qloss * settings.sbase,
+                "direction": direction,
+                "display_MW": display_mw,
+                "display_MVAR": display_mvar
+            }
+        for load_name, load in self.circuit.loads.items():
+            bus1 = self.circuit.buses[load.bus1_name]
+            P12 = load.p * settings.sbase
+            Q12 = load.q * settings.sbase
+            if P12 >= 0:
+                direction = f"{bus1.name} -> load"
+                display_mw = P12
+                display_mvar = Q12
+            else:
+                direction = f" load -> {bus1.name}"
+                display_mw = abs(P12)
+                display_mvar = abs(Q12)
+
+            flow_results_g_l[load_name] = {
+                "type": "Load",
+                "from_bus": bus1.name,
+                "to": "load",
+                "P12_MW": P12,
+                "Q12_MVAR": Q12,
+                "Ploss_MW": P12,
+                "Qloss_MVAR": Q12,
+                "direction": direction,
+                "display_MW": display_mw,
+                "display_MVAR": display_mvar
+            }
+        #for gen_name, gen in self.circuit.generators.items():
+           # bus1 = self.circuit.buses[gen.bus1_name]
+           # P = gen.p
+           # Q = gen.q
+
+        return flow_results_tl_tf, flow_results_g_l
+
+    def print_flow_results(self, flow_results_tl_tf: dict, flow_results_g_l: dict):
+        for element_name, data in flow_results_tl_tf.items():
+            print(f"{element_name}:")
+            print(f"  Type:         {data['type']}")
+            print(f"  From Bus:     {data['from_bus']}")
+            print(f"  To Bus:       {data['to_bus']}")
+            print(f"  P12 (MW):     {data['P12_MW']:.4f}")
+            print(f"  Q12 (MVAR):   {data['Q12_MVAR']:.4f}")
+            print(f"  Ploss (MW):   {data['Ploss_MW']:.4f}")
+            print(f"  Qloss (MVAR): {data['Qloss_MVAR']:.4f}")
+            print(f"  Direction:    {data['direction']}")
+            print(f"  Display MW:   {data['display_MW']:.4f}")
+            print(f"  Display MVAR: {data['display_MVAR']:.4f}\n")
+
+        for element_name, data_s in flow_results_g_l.items():
+            print(f"{element_name}:")
+            print(f"  Type:         {data_s['type']}")
+            print(f"  From Bus:     {data_s['from_bus']}")
+            print(f"  To:           {data_s['to']}")
+            print(f"  P12 (MW):     {data_s['P12_MW']:.4f}")
+            print(f"  Q12 (MVAR):   {data_s['Q12_MVAR']:.4f}")
+            print(f"  Qloss (MVAR): {data_s['Qloss_MVAR']:.4f}")
+            print(f"  Direction:    {data_s['direction']}")
+            print(f"  Display MW:   {data_s['display_MW']:.4f}")
+            print(f"  Display MVAR: {data_s['display_MVAR']:.4f}\n")
+
+
 
 if __name__ == '__main__':
     from bus import Bus
     from circuit import Circuit
     from jacobian import Jacobian
+    from settings import Settings
 
     c1 = Circuit("Test Circuit")
     Bus.index_counter = 0
@@ -148,7 +309,7 @@ if __name__ == '__main__':
 
     print("\nJacobian Shape:")
     print(jacobian_matrix.shape)
-
+    sbaseS = Settings()
     pf = PowerFlow(c1, J)
 
     NR = pf.solve(tol=0.001, max_iter = 50)
@@ -161,3 +322,8 @@ if __name__ == '__main__':
         print(f"{bus_name}:")
         print(f"   Voltage (pu): {data['vpu']:.6f}")
         print(f"   Angle (deg):  {data['delta']:.6f}\n")
+
+    pfd_tf_l, pfd_g_l = pf.compute_power_flow_direction(sbaseS)
+    print("\nPower Flow Results:\n")
+    pfr = pf.print_flow_results(pfd_tf_l, pfd_g_l)
+
