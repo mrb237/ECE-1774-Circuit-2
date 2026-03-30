@@ -113,6 +113,19 @@ class SystemTest:
             print(f"  {name}: {state}")
 
     # ---------------------------------------------------------
+    # ACTIVE / ISLANDED BUS REPORTING
+    # ---------------------------------------------------------
+    def print_active_and_islanded_buses(self):
+        active = sorted(self.circuit.get_active_bus_names())
+        islanded = sorted(self.circuit.get_islanded_bus_names())
+
+        print("\nActive Buses:")
+        print(active)
+
+        print("\nIslanded Buses:")
+        print(islanded)
+
+    # ---------------------------------------------------------
     # SAFE SOLVER CALL
     # ---------------------------------------------------------
     def safe_solve(self, title="Solve Results", flat_start=True):
@@ -140,17 +153,10 @@ class SystemTest:
 
         print("\nStructured Mismatch Output:")
 
-        active_buses = self.circuit.get_active_bus_names()
-
-        non_slack_buses = [
-            bus for bus in self.circuit.buses.values()
-            if bus.name in active_buses and bus.bus_type != "Slack"
-        ]
-
-        pq_buses = [
-            bus for bus in self.circuit.buses.values()
-            if bus.name in active_buses and bus.bus_type != "PQ"
-        ]
+        non_slack_buses = [bus for bus in self.circuit.buses.values()
+                           if bus.name in self.circuit.get_active_bus_names() and bus.bus_type != "Slack"]
+        pq_buses = [bus for bus in self.circuit.buses.values()
+                    if bus.name in self.circuit.get_active_bus_names() and bus.bus_type == "PQ"]
 
         # First all ΔP terms
         for i, bus in enumerate(non_slack_buses):
@@ -163,7 +169,7 @@ class SystemTest:
 
         return mismatch
 
-    def print_jacobian(self, decimals=2):
+    def print_jacobian(self, decimals=4):
         self.refresh_objects()
         jacobian_matrix = self.jacobian.calc_jacobian()
 
@@ -421,6 +427,7 @@ class SystemTest:
         self.build_default_circuit()
         self.reset_default_model()
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -435,6 +442,7 @@ class SystemTest:
         self.build_default_circuit()
         self.apply_base_case_state()
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -453,6 +461,7 @@ class SystemTest:
         self.apply_tl2_open_running_state()
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -466,6 +475,7 @@ class SystemTest:
         self.set_breaker("BR_TL2", False)
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -486,6 +496,7 @@ class SystemTest:
         self.apply_g1_open_running_state()
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -500,6 +511,7 @@ class SystemTest:
         self.apply_g1_open_before_start_state()
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -518,6 +530,7 @@ class SystemTest:
         self.apply_g2_open_running_state()
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -532,6 +545,7 @@ class SystemTest:
         self.apply_g2_open_before_start_state()
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -550,6 +564,7 @@ class SystemTest:
         self.apply_l2_open_state()
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -564,6 +579,7 @@ class SystemTest:
         self.apply_l2_open_state()
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
@@ -579,6 +595,7 @@ class SystemTest:
         self.apply_t2_open_state()
 
         self.print_breaker_states()
+        self.print_active_and_islanded_buses()
         self.print_ybus()
 
         print("\nReference bus values for T2-open case applied.")
