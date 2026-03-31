@@ -73,7 +73,6 @@ class PowerFlow:
         }
 
     def compute_power_flow_direction(self, settings: Settings):
-        global direction
         flow_results_tl_tf = {}
         flow_results_g_l = {}
 
@@ -102,13 +101,26 @@ class PowerFlow:
             Ploss = P12 + P21
             Qloss = Q12 + Q21
 
-            # determine displayed direction from real power
-            if P12 >= 0:
-                direction = f"{bus1.name} -> {bus2.name}"
-                display_mw = P12 * settings.sbase
-                display_mvar = Q12 * settings.sbase
-            else:
-                direction = f"{bus2.name} -> {bus1.name}"
+            direction_q = None  # default
+
+            if P12 >= 0 and Q12 >= 0:
+                direction = f"{bus1.name} p -> {bus2.name}"
+                direction_q = f"{bus1.name} q -> {bus2.name}"
+                display_mw = abs(P12) * settings.sbase
+                display_mvar = abs(Q12) * settings.sbase
+            elif P12 <= 0 and Q12 <= 0:
+                direction = f"{bus2.name} p-> {bus1.name}"
+                direction_q = f"{bus2.name} q-> {bus1.name}"
+                display_mw = abs(P12) * settings.sbase
+                display_mvar = abs(Q12) * settings.sbase
+            elif P12 >= 0 and Q12 <= 0:
+                direction = f"{bus1.name} p -> {bus2.name}"
+                direction_q = f"{bus2.name} q-> {bus1.name}"
+                display_mw = abs(P12) * settings.sbase
+                display_mvar = abs(Q12) * settings.sbase
+            else:  # P_delivered <= 0 and Q_delivered >= 0
+                direction = f"{bus2.name} p-> {bus1.name}"
+                direction_q = f"{bus1.name} q -> {bus2.name}"
                 display_mw = abs(P12) * settings.sbase
                 display_mvar = abs(Q12) * settings.sbase
 
@@ -123,6 +135,7 @@ class PowerFlow:
                 "Ploss_MW": Ploss * settings.sbase,
                 "Qloss_MVAR": Qloss * settings.sbase,
                 "direction": direction,
+                "direction_q": direction_q,
                 "display_MW": display_mw,
                 "display_MVAR": display_mvar
             }
@@ -150,12 +163,26 @@ class PowerFlow:
             Ploss = P12 + P21
             Qloss = Q12 + Q21
 
-            if P12 >= 0:
-                direction = f"{bus1.name} -> {bus2.name}"
-                display_mw = P12 * settings.sbase
-                display_mvar = Q12 * settings.sbase
-            else:
-                direction = f"{bus2.name} -> {bus1.name}"
+            direction_q = None  # default
+
+            if P12 >= 0 and Q12 >= 0:
+                direction = f"{bus1.name} p -> {bus2.name}"
+                direction_q = f"{bus1.name} q -> {bus2.name}"
+                display_mw = abs(P12) * settings.sbase
+                display_mvar = abs(Q12) * settings.sbase
+            elif P12 <= 0 and Q12 <= 0:
+                direction = f"{bus2.name} p-> {bus1.name}"
+                direction_q = f"{bus2.name} q-> {bus1.name}"
+                display_mw = abs(P12) * settings.sbase
+                display_mvar = abs(Q12) * settings.sbase
+            elif P12 >= 0 and Q12 <= 0:
+                direction = f"{bus1.name} p -> {bus2.name}"
+                direction_q = f"{bus2.name} q-> {bus1.name}"
+                display_mw = abs(P12) * settings.sbase
+                display_mvar = abs(Q12) * settings.sbase
+            else: #P_delivered <= 0 and Q_delivered >= 0
+                direction = f"{bus2.name} p-> {bus1.name}"
+                direction_q = f"{bus1.name} q -> {bus2.name}"
                 display_mw = abs(P12) * settings.sbase
                 display_mvar = abs(Q12) * settings.sbase
 
@@ -170,6 +197,7 @@ class PowerFlow:
                 "Ploss_MW": Ploss * settings.sbase,
                 "Qloss_MVAR": Qloss * settings.sbase,
                 "direction": direction,
+                "direction_q": direction_q,
                 "display_MW": display_mw,
                 "display_MVAR": display_mvar
             }
@@ -178,6 +206,9 @@ class PowerFlow:
 
             P_delivered = 0.0
             Q_delivered = 0.0
+
+            P_l = load.p * settings.sbase
+            Q_l = load.q * settings.sbase
 
             # PQ bus: sum incoming flows from already-calculated results
             for line_name, data in flow_results_tl_tf.items():
@@ -192,11 +223,9 @@ class PowerFlow:
                             Q_delivered += (data["Q12_MVAR"])
 
                 elif data["type"] == "Transformer":
-                    ##Question on PI
-                    Pcalc, Qcalc = self.circuit.compute_power_injection(bus1)
                     if data["from_bus"] == bus1.name:
-                        P_delivered += (data["P12_MW"])
-                        Q_delivered += (data["Q12_MVAR"])
+                        P_delivered += P_l
+                        Q_delivered +=  Q_l
                     elif data["to_bus"] == bus1.name:
                         if data["P21_MW"] < 0:
                             P_delivered += (data["P21_MW"])
@@ -251,6 +280,7 @@ class PowerFlow:
             print(f"  Ploss (MW):   {data['Ploss_MW']:.4f}")
             print(f"  Qloss (MVAR): {data['Qloss_MVAR']:.4f}")
             print(f"  Direction:    {data['direction']}")
+            print(f"  Direction Q:  {data['direction_q']}")
             print(f"  Display MW:   {data['display_MW']:.4f}")
             print(f"  Display MVAR: {data['display_MVAR']:.4f}\n")
 
