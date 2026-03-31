@@ -9,8 +9,10 @@ class Jacobian:
         self.buses = circuit.buses
         self.ybus = circuit.ybus
 
-        # Ordered by bus index so rows/columns match Ybus
-        self.ordered_buses = sorted(self.buses.values(), key=lambda bus: bus.bus_index)
+        active_bus_names = self.circuit.get_active_bus_names()
+        self.ordered_buses = sorted(
+            [bus for bus in self.buses.values() if bus.name in active_bus_names],
+            key=lambda bus: bus.bus_index)
 
         self.angle_buses = [bus for bus in self.ordered_buses if bus.bus_type != "Slack"]
         self.voltage_buses = [bus for bus in self.ordered_buses if bus.bus_type == "PQ"]
