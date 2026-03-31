@@ -33,10 +33,9 @@ class PowerFlow:
                     bus.vpu = 1.0
                     bus.delta = 0.0
 
-        jacobian_obj = Jacobian(self.circuit)
-
         # Newton-Raphson iteration loop
         for self.iteration in range(1, max_iter + 1):
+            jacobian_obj = Jacobian(self.circuit)
             mismatch = self.circuit.compute_power_mismatch()
             J = jacobian_obj.calc_jacobian()
             max_mismatch = np.max(abs(mismatch))

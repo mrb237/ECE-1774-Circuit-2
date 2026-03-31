@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="ADDED POWER FLOW MAG NOT COMPLETE">
+    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="Testing">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jacobian.py" beforeDir="false" afterPath="$PROJECT_DIR$/jacobian.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/power_flow.py" beforeDir="false" afterPath="$PROJECT_DIR$/power_flow.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -48,6 +49,7 @@
   &quot;associatedIndex&quot;: 4
 }</component>
   <component name="ProjectId" id="39Ttfs8rKePW0ixBI5vXnoLfIiv" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -209,6 +211,7 @@
       <workItem from="1773610483636" duration="341000" />
       <workItem from="1773749902140" duration="3251000" />
       <workItem from="1774887516638" duration="1753000" />
+      <workItem from="1774957908061" duration="1157000" />
     </task>
     <task id="LOCAL-00001" summary="Test">
       <option name="closed" value="true" />
@@ -420,7 +423,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/power_flow.py</url>
-          <line>199</line>
+          <line>238</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
       </breakpoints>
