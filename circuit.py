@@ -81,27 +81,47 @@ class Circuit:
         - If both generators are disconnected, raise blackout condition
         """
 
-        g1_connected = self.is_connection_closed("G1", "Bus1")
-        g2_connected = self.is_connection_closed("G2", "Bus3")
-
         # Reset generator buses first
         self.buses["Bus1"].bus_type = "PQ"
         self.buses["Bus3"].bus_type = "PQ"
 
-        if g1_connected:
-            self.buses["Bus1"].bus_type = "Slack"
+        g1_closed = self.is_connection_closed("G1", "Bus1")
+        g2_closed = self.is_connection_closed("G2", "Bus3")
 
-            if g2_connected:
+        if g1_closed:
+            self.buses["Bus1"].bus_type = "Slack"
+            if g2_closed:
                 self.buses["Bus3"].bus_type = "PV"
             else:
                 self.buses["Bus3"].bus_type = "PQ"
-
-        elif g2_connected:
+        elif g2_closed:
             self.buses["Bus3"].bus_type = "Slack"
             self.buses["Bus1"].bus_type = "PQ"
-
         else:
             raise ValueError("Both generators are disconnected. No Slack bus available.")
+
+        active_buses = self.get_active_bus_names()
+
+        bus1_active = "Bus1" in active_buses and g1_closed
+        bus3_active = "Bus3" in active_buses and g2_closed
+
+        self.buses["Bus1"].bus_type = "PQ"
+        self.buses["Bus3"].bus_type = "PQ"
+
+        if bus1_active:
+            self.buses["Bus1"].bus_type = "Slack"
+            if bus3_active:
+                self.buses["Bus3"].bus_type = "PV"
+            else:
+                self.buses["Bus3"].bus_type = "PQ"
+        elif bus3_active:
+            self.buses["Bus3"].bus_type = "Slack"
+            self.buses["Bus1"].bus_type = "PQ"
+        else:
+            raise ValueError("No energized generator bus available to act as Slack")
+
+    def is_generator_active(self, gen_name:str, bus_name:str):
+        return self.is_connection_closed(gen_name, bus_name) and bus_name in self.get_active_bus_names()
 
     def build_adjacency_list(self):
         """
@@ -281,12 +301,12 @@ class Circuit:
 
             for gen in self.generators.values():
                 if gen.bus1_name == bus.name:
-                    if self.is_connection_closed(gen.name, bus.name):
+                    if self.is_generator_active(gen.name, bus.name):
                         Pspec += gen.p
 
             for load in self.loads.values():
                 if load.bus1_name == bus.name:
-                    if self.is_connection_closed(load.name, bus.name):
+                    if self.is_connection_closed(load.name, bus.name) and bus.name in active_buses:
                         Pspec -= load.p
                         Qspec -= load.q
 

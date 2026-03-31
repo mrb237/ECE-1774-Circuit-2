@@ -169,7 +169,7 @@ class SystemTest:
 
         return mismatch
 
-    def print_jacobian(self, decimals=4):
+    def print_jacobian(self, decimals=2):
         self.refresh_objects()
         jacobian_matrix = self.jacobian.calc_jacobian()
 
