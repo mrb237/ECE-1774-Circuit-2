@@ -3,6 +3,7 @@ from circuit import Circuit
 from jacobian import Jacobian
 from settings import Settings
 
+
 class PowerFlow:
     def __init__(self, circuit: Circuit, jacobian: Jacobian):
         self.circuit = circuit
@@ -72,6 +73,7 @@ class PowerFlow:
         }
 
     def compute_power_flow_direction(self, settings: Settings):
+        global direction
         flow_results_tl_tf = {}
         flow_results_g_l = {}
 
@@ -173,33 +175,68 @@ class PowerFlow:
             }
         for load_name, load in self.circuit.loads.items():
             bus1 = self.circuit.buses[load.bus1_name]
-            P12 = load.p * settings.sbase
-            Q12 = load.q * settings.sbase
-            if P12 >= 0:
-                direction = f"{bus1.name} -> load"
-                display_mw = P12
-                display_mvar = Q12
-            else:
-                direction = f" load -> {bus1.name}"
-                display_mw = abs(P12)
-                display_mvar = abs(Q12)
 
+            P_delivered = 0.0
+            Q_delivered = 0.0
+
+            # PQ bus: sum incoming flows from already-calculated results
+            for line_name, data in flow_results_tl_tf.items():
+                if data["type"] == "Transmission Line":
+                    if data["to_bus"] == bus1.name:
+                        #abs becuase - would be leaving bus2
+                        P_delivered += abs(data["P21_MW"])
+                        Q_delivered += abs(data["Q21_MVAR"])
+                    elif data["from_bus"] == bus1.name:
+                        if data["P12_MW"] < 0:
+                            P_delivered += (data["P12_MW"])
+                            Q_delivered += (data["Q12_MVAR"])
+
+                elif data["type"] == "Transformer":
+                    ##Question on PI
+                    Pcalc, Qcalc = self.circuit.compute_power_injection(bus1)
+                    if data["from_bus"] == bus1.name:
+                        P_delivered += (data["P12_MW"])
+                        Q_delivered += (data["Q12_MVAR"])
+                    elif data["to_bus"] == bus1.name:
+                        if data["P21_MW"] < 0:
+                            P_delivered += (data["P21_MW"])
+                            Q_delivered += (data["Q21_MVAR"])
+
+            direction_q = None  # default
+
+            if P_delivered >= 0 and Q_delivered >= 0:
+                direction = f"{bus1.name} -> load"
+                display_mw = P_delivered
+                display_mvar = Q_delivered
+            elif P_delivered <= 0 and Q_delivered <= 0:
+                direction = f"load -> {bus1.name}"
+                display_mw = P_delivered
+                display_mvar = Q_delivered
+            elif P_delivered >= 0 and Q_delivered <= 0:
+                direction = f"{bus1.name} -> Load_P"
+                direction_q = f"load Q -> {bus1.name}"
+                display_mw = P_delivered
+                display_mvar = Q_delivered
+            else: #P_delivered <= 0 and Q_delivered >= 0
+                direction = f"load P -> {bus1.name}"
+                direction_q = f"{bus1.name} -> Load_Q"
+                display_mw = P_delivered
+                display_mvar = Q_delivered
+
+            # outside all branches
             flow_results_g_l[load_name] = {
                 "type": "Load",
                 "from_bus": bus1.name,
                 "to": "load",
-                "P12_MW": P12,
-                "Q12_MVAR": Q12,
-                "Ploss_MW": P12,
-                "Qloss_MVAR": Q12,
+                "P_delivered_MW": P_delivered,
+                "Q_delivered_MVAR": Q_delivered,
+                "P_specified_MW": load.mw,
+                "Q_specified_MVAR": load.mvar,
                 "direction": direction,
+                "direction_q": direction_q,
                 "display_MW": display_mw,
                 "display_MVAR": display_mvar
             }
-        #for gen_name, gen in self.circuit.generators.items():
-           # bus1 = self.circuit.buses[gen.bus1_name]
-           # P = gen.p
-           # Q = gen.q
 
         return flow_results_tl_tf, flow_results_g_l
 
@@ -219,15 +256,16 @@ class PowerFlow:
 
         for element_name, data_s in flow_results_g_l.items():
             print(f"{element_name}:")
-            print(f"  Type:         {data_s['type']}")
-            print(f"  From Bus:     {data_s['from_bus']}")
-            print(f"  To:           {data_s['to']}")
-            print(f"  P12 (MW):     {data_s['P12_MW']:.4f}")
-            print(f"  Q12 (MVAR):   {data_s['Q12_MVAR']:.4f}")
-            print(f"  Qloss (MVAR): {data_s['Qloss_MVAR']:.4f}")
-            print(f"  Direction:    {data_s['direction']}")
-            print(f"  Display MW:   {data_s['display_MW']:.4f}")
-            print(f"  Display MVAR: {data_s['display_MVAR']:.4f}\n")
+            print(f"  Type:              {data_s['type']}")
+            print(f"  Bus:               {data_s['from_bus']}")
+            print(f"  To:                {data_s['to']}")
+            print(f"  P Delivered (MW):  {data_s['P_delivered_MW']:.4f}")
+            print(f"  Q Delivered (MVAR):{data_s['Q_delivered_MVAR']:.4f}")
+            print(f"  P Specified (MW):  {data_s['P_specified_MW']:.4f}")
+            print(f"  Q Specified (MVAR):{data_s['Q_specified_MVAR']:.4f}")
+            print(f"  Direction:         {data_s['direction']}")
+            print(f"  Display MW:        {data_s['display_MW']:.4f}")
+            print(f"  Display MVAR:      {data_s['display_MVAR']:.4f}\n")
 
 
 
@@ -326,4 +364,3 @@ if __name__ == '__main__':
     pfd_tf_l, pfd_g_l = pf.compute_power_flow_direction(sbaseS)
     print("\nPower Flow Results:\n")
     pfr = pf.print_flow_results(pfd_tf_l, pfd_g_l)
-
