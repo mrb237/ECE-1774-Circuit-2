@@ -364,4 +364,3 @@ if __name__ == '__main__':
     pfd_tf_l, pfd_g_l = pf.compute_power_flow_direction(sbaseS)
     print("\nPower Flow Results:\n")
     pfr = pf.print_flow_results(pfd_tf_l, pfd_g_l)
-
