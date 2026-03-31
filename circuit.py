@@ -73,42 +73,32 @@ class Circuit:
         """
         Hardcoded generator-role logic for the 5-bus system.
 
-        G1 at Bus1 = primary slack generator
-        G2 at Bus3 = secondary generator
-
         Rules:
-        - If G1 is connected, Bus1 remains Slack.
-        - If G1 is disconnected and G2 is connected, Bus3 becomes Slack.
-        - If G2 is disconnected, Bus3 becomes PQ.
-        - If both are disconnected, no slack exists -> blackout condition.
+        - If G1 is connected, Bus1 is Slack
+        - If G2 is also connected, Bus3 is PV
+        - If G1 is disconnected and G2 is connected, Bus3 becomes Slack
+        - If G2 is disconnected but G1 is connected, Bus3 becomes PQ
+        - If both generators are disconnected, raise blackout condition
         """
 
         g1_connected = self.is_connection_closed("G1", "Bus1")
         g2_connected = self.is_connection_closed("G2", "Bus3")
 
-        # Reset both generator buses to PQ before assigning roles
+        # Reset generator buses first
         self.buses["Bus1"].bus_type = "PQ"
         self.buses["Bus3"].bus_type = "PQ"
 
         if g1_connected:
             self.buses["Bus1"].bus_type = "Slack"
-            self.buses["Bus1"].vpu = self.generators["G1"].voltage_setpoint
-            self.buses["Bus1"].delta = 0.0
 
             if g2_connected:
                 self.buses["Bus3"].bus_type = "PV"
-                self.buses["Bus3"].vpu = self.generators["G2"].voltage_setpoint
             else:
                 self.buses["Bus3"].bus_type = "PQ"
 
         elif g2_connected:
             self.buses["Bus3"].bus_type = "Slack"
-            self.buses["Bus3"].vpu = self.generators["G2"].voltage_setpoint
-            self.buses["Bus3"].delta = 0.0
-
             self.buses["Bus1"].bus_type = "PQ"
-            self.buses["Bus1"].vpu = 1.0
-            self.buses["Bus1"].delta = 0.0
 
         else:
             raise ValueError("Both generators are disconnected. No Slack bus available.")
