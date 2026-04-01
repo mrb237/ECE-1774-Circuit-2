@@ -84,11 +84,9 @@ class SystemTest:
     # RESET MODEL TO DEFAULT POWER VALUES / BUS TYPES
     # ---------------------------------------------------------
     def reset_default_model(self):
-        # Default loads
         self.set_load("L1", 80.0, 40.0)
         self.set_load("L2", 800.0, 280.0)
 
-        # Default bus roles
         self.circuit.buses["Bus1"].bus_type = "Slack"
         self.circuit.buses["Bus3"].bus_type = "PV"
 
@@ -153,10 +151,17 @@ class SystemTest:
 
         print("\nStructured Mismatch Output:")
 
-        non_slack_buses = [bus for bus in self.circuit.buses.values()
-                           if bus.name in self.circuit.get_active_bus_names() and bus.bus_type != "Slack"]
-        pq_buses = [bus for bus in self.circuit.buses.values()
-                    if bus.name in self.circuit.get_active_bus_names() and bus.bus_type == "PQ"]
+        active_buses = self.circuit.get_active_bus_names()
+
+        non_slack_buses = [
+            bus for bus in self.circuit.buses.values()
+            if bus.name in active_buses and bus.bus_type != "Slack"
+        ]
+
+        pq_buses = [
+            bus for bus in self.circuit.buses.values()
+            if bus.name in active_buses and bus.bus_type == "PQ"
+        ]
 
         # First all ΔP terms
         for i, bus in enumerate(non_slack_buses):
@@ -194,6 +199,15 @@ class SystemTest:
             print(f"  Angle (deg):  {data['delta']:.6f}")
             print()
 
+    def print_current_bus_state(self, title="Current Bus State"):
+        print(f"\n{title}")
+        for bus_name, bus in self.circuit.buses.items():
+            print(f"{bus_name}:")
+            print(f"  Voltage (pu): {bus.vpu:.6f}")
+            print(f"  Angle (deg):  {bus.delta:.6f}")
+            print(f"  Type:         {bus.bus_type}")
+            print()
+
     # ---------------------------------------------------------
     # APPLY REFERENCE STATES
     # ---------------------------------------------------------
@@ -218,7 +232,6 @@ class SystemTest:
     def apply_tl2_open_running_state(self):
         self.reset_default_model()
 
-        # Match PowerWorld bus values
         self.circuit.buses["Bus1"].vpu = 1.00000
         self.circuit.buses["Bus1"].delta = 0.00
 
@@ -234,7 +247,6 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.94568
         self.circuit.buses["Bus5"].delta = 3.08
 
-        # Match PowerWorld Bus 2 load
         self.set_load("L2", 145.12, 50.79)
 
     def apply_tl2_open_before_start_state(self):
@@ -256,6 +268,49 @@ class SystemTest:
         self.circuit.buses["Bus5"].delta = -4.33
 
         self.set_load("L2", 800.0, 280.0)
+
+    # ---------------------------------------------------------
+    # TL3 OPEN (Bus 2 - Bus 4 line open)
+    # ---------------------------------------------------------
+    def apply_tl3_open_running_state(self):
+        self.reset_default_model()
+
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 0.37517
+        self.circuit.buses["Bus2"].delta = -43.02
+
+        self.circuit.buses["Bus3"].vpu = 0.98562
+        self.circuit.buses["Bus3"].delta = 9.25
+
+        self.circuit.buses["Bus4"].vpu = 0.94667
+        self.circuit.buses["Bus4"].delta = 6.71
+
+        self.circuit.buses["Bus5"].vpu = 0.85157
+        self.circuit.buses["Bus5"].delta = -0.52
+
+        self.set_load("L2", 445.08, 155.78)
+
+    def apply_tl3_open_before_start_state(self):
+        self.reset_default_model()
+
+        self.circuit.buses["Bus1"].vpu = 1.00000
+        self.circuit.buses["Bus1"].delta = 0.00
+
+        self.circuit.buses["Bus2"].vpu = 0.37517
+        self.circuit.buses["Bus2"].delta = -43.02
+
+        self.circuit.buses["Bus3"].vpu = 0.98562
+        self.circuit.buses["Bus3"].delta = 9.25
+
+        self.circuit.buses["Bus4"].vpu = 0.94667
+        self.circuit.buses["Bus4"].delta = 6.71
+
+        self.circuit.buses["Bus5"].vpu = 0.85157
+        self.circuit.buses["Bus5"].delta = -0.52
+
+        self.set_load("L2", 445.08, 155.78)
 
     # ---------------------------------------------------------
     # G1 OPEN (Slack generator removed)
@@ -383,16 +438,10 @@ class SystemTest:
     # ---------------------------------------------------------
     # T2 OPEN REFERENCE ONLY
     # This creates an islanded / removed Bus 3 in PowerWorld.
-    # Your current solver likely does not fully support removing
-    # that bus from the active NR system, so this is best handled
-    # as a reference / reporting case for now.
     # ---------------------------------------------------------
     def apply_t2_open_state(self):
         self.reset_default_model()
 
-        # Bus 3 removed / isolated in PowerWorld
-        # We mimic that by opening the transformer, generator, and load
-        # connected to Bus 3.
         self.set_breaker("BR_T2", False)
         self.set_breaker("BR_G2", False)
         self.set_breaker("BR_L1", False)
@@ -412,7 +461,6 @@ class SystemTest:
         self.circuit.buses["Bus5"].vpu = 0.79093
         self.circuit.buses["Bus5"].delta = -9.01
 
-        # Bus 3 load and generation removed
         self.set_load("L1", 0.0, 0.0)
         self.set_load("L2", 616.44, 215.75)
 
@@ -431,6 +479,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Initial Bus State Before Base Solve")
 
         self.safe_solve(title="Base Case Results", flat_start=True)
 
@@ -446,6 +495,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: Base Case Validation")
 
     def test_tl2_open_running(self):
         print("\n===================================================")
@@ -465,6 +515,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: TL2 Open While Running")
 
     def test_tl2_open_before_start(self):
         print("\n===================================================")
@@ -473,12 +524,14 @@ class SystemTest:
 
         self.build_default_circuit()
         self.set_breaker("BR_TL2", False)
+        self.apply_tl2_open_before_start_state()
 
         self.print_breaker_states()
         self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: TL2 Open Before Start")
 
         self.safe_solve(title="TL2 Open Before Start Results", flat_start=True)
 
@@ -500,6 +553,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: G1 Open While Running")
 
     def test_g1_open_before_start(self):
         print("\n===================================================")
@@ -515,6 +569,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: G1 Open Before Start")
 
     def test_g2_open_running(self):
         print("\n===================================================")
@@ -534,6 +589,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: G2 Open While Running")
 
     def test_g2_open_before_start(self):
         print("\n===================================================")
@@ -549,6 +605,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: G2 Open Before Start")
 
     def test_l2_open_running(self):
         print("\n===================================================")
@@ -568,6 +625,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: L2 Open While Running")
 
     def test_l2_open_before_start(self):
         print("\n===================================================")
@@ -583,6 +641,7 @@ class SystemTest:
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: L2 Open Before Start")
 
     def test_t2_open_reference(self):
         print("\n===================================================")
@@ -597,10 +656,49 @@ class SystemTest:
         self.print_breaker_states()
         self.print_active_and_islanded_buses()
         self.print_ybus()
+        self.print_current_bus_state("Reference Bus State: T2 Open")
 
         print("\nReference bus values for T2-open case applied.")
         print("Mismatch / Jacobian comparison may not be meaningful until")
         print("the solver supports removing islanded buses from the active system.")
+
+    def test_tl3_open_running(self):
+        print("\n===================================================")
+        print("CASE 10: TL3 (BUS 2 - BUS 4) OPEN WHILE RUNNING")
+        print("===================================================")
+
+        self.build_default_circuit()
+        base_result = self.safe_solve(title="Base Solve Before TL3 Open", flat_start=True)
+        if base_result is None:
+            return
+
+        self.set_breaker("BR_TL3", False)
+        self.apply_tl3_open_running_state()
+
+        self.print_breaker_states()
+        self.print_active_and_islanded_buses()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: TL3 Open While Running")
+
+    def test_tl3_open_before_start(self):
+        print("\n===================================================")
+        print("CASE 11: TL3 (BUS 2 - BUS 4) OPEN BEFORE START")
+        print("===================================================")
+
+        self.build_default_circuit()
+        self.set_breaker("BR_TL3", False)
+        self.apply_tl3_open_before_start_state()
+
+        self.print_breaker_states()
+        self.print_active_and_islanded_buses()
+        self.print_ybus()
+        self.print_mismatch()
+        self.print_jacobian()
+        self.print_current_bus_state("Reference Bus State: TL3 Open Before Start")
+
+        self.safe_solve(title="TL3 Open Before Start Results", flat_start=True)
 
     # ---------------------------------------------------------
     # RUN ALL
@@ -622,6 +720,9 @@ class SystemTest:
         self.test_l2_open_before_start()
 
         self.test_t2_open_reference()
+
+        self.test_tl3_open_running()
+        self.test_tl3_open_before_start()
 
 
 if __name__ == "__main__":
