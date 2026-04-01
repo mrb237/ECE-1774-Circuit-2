@@ -11,53 +11,60 @@ class PowerFlow:
         self.tol = 0.001
         self.max_iter = 50
 
-
     def solve(self, tol=0.001, max_iter=50, flat_start=True):
+        self.converged = False
+        self.iteration = 0
         self.circuit.update_generator()
         self.circuit.calc_ybus()
         self.circuit.zero_islanded_buses()
-        self.converged = False
-        self.iteration = 0
 
         if flat_start:
-            # flat start initialization
+            active_buses = self.circuit.get_active_bus_names()
+
             for bus in self.circuit.buses.values():
+                if bus.name not in active_buses:
+                    continue
+
                 if bus.bus_type == "Slack":
                     continue
                 elif bus.bus_type == "PV":
                     bus.delta = 0.0
                     for gen in self.circuit.generators.values():
-                        if gen.bus1_name == bus.name:
+                        if gen.bus1_name == bus.name and self.circuit.is_generator_active(gen.name, bus.name):
                             bus.vpu = gen.voltage_setpoint
                 elif bus.bus_type == "PQ":
                     bus.vpu = 1.0
                     bus.delta = 0.0
 
-        # Newton-Raphson iteration loop
         for self.iteration in range(1, max_iter + 1):
+            self.circuit.update_generator()
+            self.circuit.calc_ybus()
+            self.circuit.zero_islanded_buses()
+
             jacobian_obj = Jacobian(self.circuit)
             mismatch = self.circuit.compute_power_mismatch()
-            J = jacobian_obj.calc_jacobian()
-            max_mismatch = np.max(abs(mismatch))
 
-            #print(f"Iteration {iteration}: max mismatch = {max_mismatch:.6f}")
+            if mismatch.size == 0:
+                self.converged = True
+                break
 
+            max_mismatch = np.max(np.abs(mismatch))
             if max_mismatch < tol:
                 self.converged = True
                 break
-            else:
-                x_vector = np.linalg.solve(J, mismatch)
-                num_angles = len(jacobian_obj.angle_buses)
-                delta_angles = x_vector[:num_angles]
-                delta_voltages = x_vector[num_angles:]
 
-                # update non-slack bus angles
-                for i, bus in enumerate(jacobian_obj.angle_buses):
-                    bus.delta += np.rad2deg(delta_angles[i])
+            J = jacobian_obj.calc_jacobian()
+            x_vector = np.linalg.solve(J, mismatch)
 
-                # update PQ bus voltages
-                for i, bus in enumerate(jacobian_obj.voltage_buses):
-                    bus.vpu += delta_voltages[i]
+            num_angles = len(jacobian_obj.angle_buses)
+            delta_angles = x_vector[:num_angles]
+            delta_voltages = x_vector[num_angles:]
+
+            for i, bus in enumerate(jacobian_obj.angle_buses):
+                bus.delta += np.rad2deg(delta_angles[i])
+
+            for i, bus in enumerate(jacobian_obj.voltage_buses):
+                bus.vpu += delta_voltages[i]
 
         if not self.converged:
             raise ValueError("Algorithm did not converge")
