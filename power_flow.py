@@ -221,8 +221,8 @@ class PowerFlow:
                 if data["type"] == "Transmission Line":
                     if data["to_bus"] == bus1.name:
                         #abs becuase - would be leaving bus2
-                        P_delivered += abs(data["P21_MW"])
-                        Q_delivered += abs(data["Q21_MVAR"])
+                        P_delivered += (data["P21_MW"])
+                        Q_delivered += (data["Q21_MVAR"])
                     elif data["from_bus"] == bus1.name:
                         if data["P12_MW"] < 0:
                             P_delivered += (data["P12_MW"])
@@ -241,22 +241,22 @@ class PowerFlow:
 
             if P_delivered >= 0 and Q_delivered >= 0:
                 direction = f"{bus1.name} -> load"
-                display_mw = P_delivered
-                display_mvar = Q_delivered
+                display_mw = abs(P_delivered)
+                display_mvar = abs(Q_delivered)
             elif P_delivered <= 0 and Q_delivered <= 0:
                 direction = f"load -> {bus1.name}"
-                display_mw = P_delivered
-                display_mvar = Q_delivered
+                display_mw = abs(P_delivered)
+                display_mvar = abs(Q_delivered)
             elif P_delivered >= 0 and Q_delivered <= 0:
                 direction = f"{bus1.name} -> Load_P"
                 direction_q = f"load Q -> {bus1.name}"
-                display_mw = P_delivered
-                display_mvar = Q_delivered
+                display_mw = abs(P_delivered)
+                display_mvar = abs(Q_delivered)
             else: #P_delivered <= 0 and Q_delivered >= 0
                 direction = f"load P -> {bus1.name}"
                 direction_q = f"{bus1.name} -> Load_Q"
-                display_mw = P_delivered
-                display_mvar = Q_delivered
+                display_mw = abs(P_delivered)
+                display_mvar = abs(Q_delivered)
 
             # outside all branches
             flow_results_g_l[load_name] = {
