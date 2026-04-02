@@ -62,6 +62,10 @@ class PowerFlow:
 
             for i, bus in enumerate(jacobian_obj.angle_buses):
                 bus.delta += np.rad2deg(delta_angles[i])
+                while bus.delta > 180:
+                    bus.delta -= 360
+                while bus.delta < -180:
+                    bus.delta += 360
 
             for i, bus in enumerate(jacobian_obj.voltage_buses):
                 bus.vpu += delta_voltages[i]
