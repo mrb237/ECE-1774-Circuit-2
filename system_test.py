@@ -128,7 +128,7 @@ class SystemTest:
     # ---------------------------------------------------------
     def safe_solve(self, title="Solve Results", flat_start=True):
         try:
-            result = self.power_flow.solve(tol=0.001, max_iter=50, flat_start=flat_start)
+            result = self.power_flow.solve(tol=0.001, max_iter=1000, flat_start=flat_start)
             self.print_bus_results(result, title=title)
             return result
         except ValueError as e:
@@ -508,14 +508,15 @@ class SystemTest:
             return
 
         self.set_breaker("BR_TL2", False)
-        self.apply_tl2_open_running_state()
+        #self.apply_tl2_open_running_state()
 
         self.print_breaker_states()
         self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
-        self.print_current_bus_state("Reference Bus State: TL2 Open While Running")
+        self.safe_solve(title="Base Solve After TL2 Open", flat_start=True)
+        #self.print_current_bus_state("Reference Bus State: TL2 Open While Running")
 
     def test_tl2_open_before_start(self):
         print("\n===================================================")
