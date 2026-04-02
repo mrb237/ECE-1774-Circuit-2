@@ -173,13 +173,17 @@ class SolverTest:
     # ---------------------------------------------------------
     def solve_running_contingency(self, breaker_names, title):
         """
-        For running cases:
-        1. solve base case
-        2. store solved V and delta
-        3. open breaker(s)
-        4. reapply stored solved V and delta
-        5. rebuild system
-        6. solve again from previous state
+        1. Build fresh circuit and solve base case.
+        2. Capture the converged bus state (V, delta).
+        3. Open the specified breaker(s).
+        4. Rebuild topology (update_generator + calc_ybus).
+        5. Restore the captured bus state so the solver starts
+           from the pre-contingency operating point.
+        6. Solve with flat_start=False.
+
+        The key fix: restore_bus_state is called AFTER refresh_objects
+        so that zero_islanded_buses inside solve() cannot wipe the
+        restored voltages before the first iteration runs.
         """
         self.build_default_circuit()
         self.reset_default_model()
@@ -187,27 +191,34 @@ class SolverTest:
         base_result = self.safe_solve(title="Base Solve Before Breaker Opens", flat_start=True)
         if base_result is None:
             return None
+
+        # Capture converged operating point
         stored_state = self.capture_bus_state()
-
-
         self.print_current_bus_state("Stored Base Solved State")
 
-        # Open one or more breakers
+        # Open breaker(s) — set_breaker calls refresh_objects internally
         for br in breaker_names:
-            self.set_breaker(br, False)
+            # Use direct breaker toggle to avoid premature refresh_objects calls
+            if br not in self.circuit.breakers:
+                raise KeyError(f"Breaker '{br}' not found.")
+            self.circuit.breakers[br].open()
 
-        # Reapply stored solved state to buses
+        # Single refresh after all breakers are opened
+        self.circuit.update_generator()
+        self.circuit.calc_ybus()
+        self.jacobian = Jacobian(self.circuit)
+        self.power_flow = PowerFlow(self.circuit, self.jacobian)
+
+        # Restore converged state NOW, after topology is rebuilt.
+        # solve() will call zero_islanded_buses which correctly identifies
+        # the islanded set from the new topology, not the old one.
         self.restore_bus_state(stored_state)
-
-        # Rebuild after topology change
-        self.refresh_objects()
 
         self.print_breaker_states()
         self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_current_bus_state("Bus State Immediately After Breaker Opens")
 
-        # Resolve from previous solved state
         result = self.safe_solve(title=title, flat_start=False)
         self.print_current_bus_state(f"Solved Bus State: {title}")
         return result

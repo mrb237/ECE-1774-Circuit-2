@@ -71,7 +71,7 @@ class PowerFlow:
                 bus.vpu += delta_voltages[i]
 
         if not self.converged:
-            raise ValueError("Algorithm did not converge")
+            raise ValueError(f"Newton-Raphson did not converge after {self.iteration} iterations. ")
 
         return {
             "converged": self.converged,
