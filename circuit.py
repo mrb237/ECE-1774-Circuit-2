@@ -31,15 +31,15 @@ class Circuit:
         self.buses[name] = busobj
         return busobj
 
-    def add_transformer(self, name: str, bus1_name: str, bus2_name: str, r: float, x: float):
+    def add_transformer(self, name: str, bus1_name: str, bus2_name: str, r: float, x: float, mva_limit: float):
         self.duplicate_name(self.transformers, name, 'Transformer')
-        transformerobj = Transformer(name, bus1_name, bus2_name, r, x)
+        transformerobj = Transformer(name, bus1_name, bus2_name, r, x, mva_limit)
         self.transformers[name] = transformerobj
         return transformerobj
 
-    def add_transmission_line(self, name: str, bus1_name: str, bus2_name: str, r: float, x: float, g: float, b: float):
+    def add_transmission_line(self, name: str, bus1_name: str, bus2_name: str, r: float, x: float, g: float, b: float, mva_limit: float):
         self.duplicate_name(self.transmission_lines, name, 'TransmissionLine')
-        transmissionlineobj = TransmissionLine(name, bus1_name, bus2_name, r, x, g, b)
+        transmissionlineobj = TransmissionLine(name, bus1_name, bus2_name, r, x, g, b, mva_limit)
         self.transmission_lines[name] = transmissionlineobj
         return transmissionlineobj
 
