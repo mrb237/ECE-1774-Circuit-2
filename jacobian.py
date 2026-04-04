@@ -206,20 +206,20 @@ if __name__ == "__main__":
     print(c1.ybus)
 
     # Converged Case
-    c1.buses["Bus1"].vpu = 1.0000000000
-    c1.buses["Bus1"].delta = 0.00
+    c1.buses["Bus1"].vpu = 1.00000
+    c1.buses["Bus1"].delta = 0.0000010000
 
-    c1.buses["Bus2"].vpu = 0.83377000000000000
-    c1.buses["Bus2"].delta = -22.40640311913491800
+    c1.buses["Bus2"].vpu = 0.9879657065
+    c1.buses["Bus2"].delta = -14.6577850557
 
-    c1.buses["Bus3"].vpu = 1.04999998126552560
-    c1.buses["Bus3"].delta = -0.59734111596806682
+    c1.buses["Bus3"].vpu = 1.0500038185
+    c1.buses["Bus3"].delta = 0.1554834102
 
-    c1.buses["Bus4"].vpu = 1.01930239875375090
-    c1.buses["Bus4"].delta = -2.83397066041765570
+    c1.buses["Bus4"].vpu = 1.0331396265
+    c1.buses["Bus4"].delta = -1.6332636943
 
-    c1.buses["Bus5"].vpu = 0.97428869484455565
-    c1.buses["Bus5"].delta = -4.54788331806453890
+    c1.buses["Bus5"].vpu = 1.0105737711
+    c1.buses["Bus5"].delta = -3.2050233851
 
     mismatch = c1.compute_power_mismatch()
 
