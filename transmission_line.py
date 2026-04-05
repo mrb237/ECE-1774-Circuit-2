@@ -1,7 +1,7 @@
 import pandas as pd
 
 class TransmissionLine:
-    def __init__(self, name, bus1_name: str, bus2_name: str, r: float, x: float, g: float, b: float):
+    def __init__(self, name, bus1_name: str, bus2_name: str, r: float, x: float, g: float, b: float, mva_limit: float = 1200):
         self.name = name
         self.bus1_name = bus1_name
         self.bus2_name = bus2_name
@@ -11,6 +11,7 @@ class TransmissionLine:
         self.b = b
         self.Yseries = 1 / (self.r + (1j * self.x))
         self.Yshunt = self.g + (1j * self.b)
+        self.mva_limit = mva_limit
 
     def calc_yprim(self):
 
