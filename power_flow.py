@@ -14,6 +14,7 @@ class PowerFlow:
     def solve(self, tol=0.001, max_iter=50, flat_start=True):
         self.converged = False
         self.iteration = 0
+
         self.circuit.update_generator()
         self.circuit.calc_ybus()
         self.circuit.zero_islanded_buses()
@@ -61,18 +62,35 @@ class PowerFlow:
             delta_angles = x_vector[:num_angles]
             delta_voltages = x_vector[num_angles:]
 
+            # Voltage magnitude update limits
+            MIN_ACTIVE_VPU = 0.3
+            MAX_VPU = 2.0
+            MIN_ISLANDED_VPU = 0.0
+
+            active_buses = self.circuit.get_active_bus_names()
+
+            # Update active non-slack bus angles only
             for i, bus in enumerate(jacobian_obj.angle_buses):
                 bus.delta += np.rad2deg(delta_angles[i])
+
                 while bus.delta > 180:
                     bus.delta -= 360
                 while bus.delta < -180:
                     bus.delta += 360
 
+            # Update PQ bus voltages
             for i, bus in enumerate(jacobian_obj.voltage_buses):
                 bus.vpu += delta_voltages[i]
 
+                if bus.name in active_buses:
+                    # Active buses should not numerically collapse to near-zero
+                    bus.vpu = max(MIN_ACTIVE_VPU, min(bus.vpu, MAX_VPU))
+                else:
+                    # Islanded buses can go to zero for blackout behavior
+                    bus.vpu = max(MIN_ISLANDED_VPU, min(bus.vpu, MAX_VPU))
+
         if not self.converged:
-            raise ValueError(f"Newton-Raphson did not converge after {self.iteration} iterations. ")
+            raise ValueError(f"Newton-Raphson did not converge after {self.iteration} iterations.")
 
         return {
             "converged": self.converged,
