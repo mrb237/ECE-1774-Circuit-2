@@ -27,13 +27,13 @@ class SystemTest:
         c.add_bus("Bus5", 345.0, "PQ")
 
         # Transformers
-        c.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02)
-        c.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01)
+        c.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02, 9999.0)
+        c.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01, 9999.0)
 
         # Transmission lines
-        c.add_transmission_line("TL1", "Bus5", "Bus4", 0.00225, 0.025, 0.0, 0.44)
-        c.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
-        c.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
+        c.add_transmission_line("TL1", "Bus5", "Bus4", 0.00225, 0.025, 0.0, 0.44, 9999.0)
+        c.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88, 9999.0)
+        c.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72, 9999.0)
 
         # Generators
         c.add_generator("G1", "Bus1", 1.00, 0.0)
@@ -77,8 +77,8 @@ class SystemTest:
         load = self.circuit.loads[load_name]
         load.mw = mw
         load.mvar = mvar
-        load.p = mw / SETTINGS.sbase
-        load.q = mvar / SETTINGS.sbase
+        load.p = load.calc_p()
+        load.q = load.calc_q()
 
     # ---------------------------------------------------------
     # RESET MODEL TO DEFAULT POWER VALUES / BUS TYPES
@@ -128,7 +128,7 @@ class SystemTest:
     # ---------------------------------------------------------
     def safe_solve(self, title="Solve Results", flat_start=True):
         try:
-            result = self.power_flow.solve(tol=0.001, max_iter=1000, flat_start=flat_start)
+            result = self.power_flow.solve(tol=0.001, max_iter=50, flat_start=flat_start)
             self.print_bus_results(result, title=title)
             return result
         except ValueError as e:
@@ -174,7 +174,7 @@ class SystemTest:
 
         return mismatch
 
-    def print_jacobian(self, decimals=2):
+    def print_jacobian(self, decimals=4):
         self.refresh_objects()
         jacobian_matrix = self.jacobian.calc_jacobian()
 
@@ -508,15 +508,14 @@ class SystemTest:
             return
 
         self.set_breaker("BR_TL2", False)
-        #self.apply_tl2_open_running_state()
+        self.apply_tl2_open_running_state()
 
         self.print_breaker_states()
         self.print_active_and_islanded_buses()
         self.print_ybus()
         self.print_mismatch()
         self.print_jacobian()
-        self.safe_solve(title="Base Solve After TL2 Open", flat_start=True)
-        #self.print_current_bus_state("Reference Bus State: TL2 Open While Running")
+        self.print_current_bus_state("Reference Bus State: TL2 Open While Running")
 
     def test_tl2_open_before_start(self):
         print("\n===================================================")
