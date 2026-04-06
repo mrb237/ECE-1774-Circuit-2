@@ -189,12 +189,12 @@ if __name__ == "__main__":
     c1.add_bus("Bus4", 345.0, "PQ")
     c1.add_bus("Bus5", 345.0, "PQ")
 
-    c1.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02)
-    c1.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01)
+    c1.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02, 600)
+    c1.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01, 1000)
 
-    c1.add_transmission_line("TL1", "Bus5", "Bus4", 0.00225, 0.025, 0.0, 0.44)
-    c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
-    c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
+    c1.add_transmission_line("TL1", "Bus5", "Bus4", 0.00225, 0.025, 0.0, 0.44, 1200)
+    c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88, 1200)
+    c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72, 1200)
 
     c1.add_generator("G1", "Bus1", 1.00, 0.0)
     c1.add_generator("G2", "Bus3", 1.05, 520.0)

@@ -337,7 +337,7 @@ class PowerFlow:
             print(f"{element_name}:")
             print(f"S_MVA calculated:     {value['element_name']}:")
             print(f"Limit: {value['limit']}")
-            print(f"MVA: {value['mva_percent']}")
+            print(f"MVA %: {value['mva_percent']}")
 
 
 
