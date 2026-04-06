@@ -63,7 +63,7 @@ class PowerFlow:
             delta_voltages = x_vector[num_angles:]
 
             # Voltage magnitude update limits
-            MIN_ACTIVE_VPU = 0.3
+            MIN_ACTIVE_VPU = 0.15
             MAX_VPU = 2.0
             MIN_ISLANDED_VPU = 0.0
 

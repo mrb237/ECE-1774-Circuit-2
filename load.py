@@ -30,10 +30,12 @@ class Load:
         """
         Switch between PQ and Z based on voltage.
         """
-        if vpu < self.min_voltage:
-            self.load_type = "Z"
-        else:
-            self.load_type = "PQ"
+        if self.load_type == "PQ":
+            if vpu < self.min_voltage:
+                self.load_type = "Z"
+        elif self.load_type == "Z":
+            if vpu > (self.min_voltage+0.05):
+                self.load_type = "PQ"
 
     def get_power(self):
         """
