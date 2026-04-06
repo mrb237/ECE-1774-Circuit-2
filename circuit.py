@@ -197,6 +197,18 @@ class Circuit:
             self.buses[bus_name].vpu = 0.0
             self.buses[bus_name].delta = 0.0
 
+    def update_load_models(self):
+        """
+        Update load types based on bus voltages.
+        """
+        for load in self.loads.values():
+            bus = self.buses[load.bus1_name]
+
+            if bus.name not in self.get_active_bus_names():
+                continue
+
+            load.update_type(bus.vpu)
+
     # Adding Methods
     def calc_ybus(self):
         # Stores amount of buses are in the dictionary
@@ -245,6 +257,22 @@ class Circuit:
             self.ybus[j, i] += (Yprim_tl.iloc[1, 0])
             self.ybus[j, j] += (Yprim_tl.iloc[1, 1])
         # Converting an array to a Dataframe matrix
+
+        # Add Z-load admittances to diagonal
+        for load in self.loads.values():
+            if not self.is_breaker_closed_for_element(load.name):
+                continue
+
+            bus = self.buses[load.bus1_name]
+
+            if bus.name not in self.get_active_bus_names():
+                continue
+
+            y_load = load.calc_yprim(bus.vpu)
+
+            if y_load != 0:
+                idx = bus.index
+                self.ybus.iloc[idx, idx] += y_load
 
         # ybus_rounded = self.ybus.round(2)
         # self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
@@ -305,10 +333,19 @@ class Circuit:
                         Pspec += gen.p
 
             for load in self.loads.values():
-                if load.bus1_name == bus.name:
-                    if self.is_connection_closed(load.name, bus.name) and bus.name in active_buses:
-                        Pspec -= load.p
-                        Qspec -= load.q
+                if not self.is_breaker_closed_for_element(load.name):
+                    continue
+
+                bus = self.buses[load.bus1_name]
+
+                if bus.name not in active_buses:
+                    continue
+
+                P_load, Q_load = load.get_power()
+
+                # Only PQ loads contribute
+                Pspec -= P_load
+                Qspec -= Q_load
 
             if bus.bus_type == "PQ" or bus.bus_type == "PV":
                 delta_P = Pspec - Pcalc

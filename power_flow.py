@@ -37,6 +37,7 @@ class PowerFlow:
                     bus.delta = 0.0
 
         for self.iteration in range(1, max_iter + 1):
+            self.circuit.update_load_models()
             self.circuit.update_generator()
             self.circuit.calc_ybus()
             self.circuit.zero_islanded_buses()
