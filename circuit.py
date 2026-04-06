@@ -201,12 +201,19 @@ class Circuit:
         """
         Update load types based on bus voltages.
         """
-        for load in self.loads.values():
-            bus = self.buses[load.bus1_name]
+        active_buses = self.get_active_bus_names()
 
-            if bus.name not in self.get_active_bus_names():
+        for load in self.loads.values():
+            if load.bus1_name not in self.buses:
                 continue
 
+            if load.bus1_name not in active_buses:
+                continue
+
+            if not self.is_connection_closed(load.name, load.bus1_name):
+                continue
+
+            bus = self.buses[load.bus1_name]
             load.update_type(bus.vpu)
 
     # Adding Methods
@@ -259,20 +266,19 @@ class Circuit:
         # Converting an array to a Dataframe matrix
 
         # Add Z-load admittances to diagonal
+        active_buses = self.get_active_bus_names()
+
         for load in self.loads.values():
-            if not self.is_breaker_closed_for_element(load.name):
+            if not self.is_connection_closed(load.name, load.bus1_name):
                 continue
 
-            bus = self.buses[load.bus1_name]
-
-            if bus.name not in self.get_active_bus_names():
+            if load.bus1_name not in active_buses:
                 continue
 
-            y_load = load.calc_yprim(bus.vpu)
-
-            if y_load != 0:
-                idx = bus.index
-                self.ybus.iloc[idx, idx] += y_load
+            if load.load_type == "Z":
+                i = bus_mapping[load.bus1_name]
+                Yload = load.calc_yprim()
+                self.ybus[i, i] += Yload
 
         # ybus_rounded = self.ybus.round(2)
         # self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
@@ -333,19 +339,12 @@ class Circuit:
                         Pspec += gen.p
 
             for load in self.loads.values():
-                if not self.is_breaker_closed_for_element(load.name):
-                    continue
-
-                bus = self.buses[load.bus1_name]
-
-                if bus.name not in active_buses:
-                    continue
-
-                P_load, Q_load = load.get_power()
-
-                # Only PQ loads contribute
-                Pspec -= P_load
-                Qspec -= Q_load
+                if load.bus1_name == bus.name:
+                    if self.is_connection_closed(load.name, bus.name) and bus.name in active_buses:
+                        load.update_type(bus.vpu)
+                        p_load, q_load = load.get_power()
+                        Pspec -= p_load
+                        Qspec -= q_load
 
             if bus.bus_type == "PQ" or bus.bus_type == "PV":
                 delta_P = Pspec - Pcalc

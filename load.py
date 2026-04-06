@@ -46,14 +46,14 @@ class Load:
         # Z loads are not part of mismatch
         return 0.0, 0.0
 
-    def calc_yprim(self, vpu:float):
+    def calc_yprim(self):
         """
         Return equivalent admittance when load is Z.
         """
         if self.load_type != "Z":
             return 0.0 + 0.0*1j
 
-        vth2 = vpu ** 2
+        vth2 = self.min_voltage ** 2
         G = self.p/vth2
         B = -self.q/vth2
         return complex(G,B)
