@@ -341,7 +341,6 @@ class Circuit:
             for load in self.loads.values():
                 if load.bus1_name == bus.name:
                     if self.is_connection_closed(load.name, bus.name) and bus.name in active_buses:
-                        load.update_type(bus.vpu)
                         p_load, q_load = load.get_power()
                         Pspec -= p_load
                         Qspec -= q_load

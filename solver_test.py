@@ -3,6 +3,7 @@ from circuit import Circuit
 from jacobian import Jacobian
 from power_flow import PowerFlow
 from settings import SETTINGS
+import numpy as np
 
 
 class SolverTest:
@@ -135,23 +136,70 @@ class SolverTest:
         print("\nYbus Matrix:")
         print(self.circuit.ybus.round(decimals))
 
-    # ---------------------------------------------------------
-    # STORE / RESTORE SOLVED STATE
-    # ---------------------------------------------------------
-    def capture_bus_state(self):
-        return {
-            bus_name: {
-                "vpu": bus.vpu,
-                "delta": bus.delta
-            }
-            for bus_name, bus in self.circuit.buses.items()
-        }
+    def print_mismatch(self, decimals=4):
+        mismatch = self.circuit.compute_power_mismatch()
 
-    def restore_bus_state(self, state_dict):
-        for bus_name, values in state_dict.items():
-            if bus_name in self.circuit.buses:
-                self.circuit.buses[bus_name].vpu = values["vpu"]
-                self.circuit.buses[bus_name].delta = values["delta"]
+        print("\nPower Mismatch Vector:")
+        print(np.round(mismatch, decimals))
+
+        active_buses = self.circuit.get_active_bus_names()
+
+        non_slack_buses = [
+            bus for bus in self.circuit.buses.values()
+            if bus.name in active_buses and bus.bus_type != "Slack"
+        ]
+
+        pq_buses = [
+            bus for bus in self.circuit.buses.values()
+            if bus.name in active_buses and bus.bus_type == "PQ"
+        ]
+
+        print("\nStructured Mismatch Output:")
+        for i, bus in enumerate(non_slack_buses):
+            print(f"ΔP at {bus.name}: {mismatch[i]:.{decimals}f}")
+
+        q_start = len(non_slack_buses)
+        for i, bus in enumerate(pq_buses):
+            print(f"ΔQ at {bus.name}: {mismatch[q_start + i]:.{decimals}f}")
+
+    def print_jacobian(self, decimals=4):
+        self.refresh_objects()
+        jacobian_matrix = self.jacobian.calc_jacobian()
+
+        print("\nJacobian Matrix:")
+        print(np.round(jacobian_matrix, decimals))
+
+    def print_power_flow_direction(self):
+        """
+        Print only type, from_bus, and to_bus / to for compact flow-direction checks.
+        """
+        self.refresh_objects()
+        flow_results_tl_tf, flow_results_g_l = self.power_flow.compute_power_flow_direction(SETTINGS)
+
+        print("\nPower Flow Direction Summary:")
+
+        for element_name, data in flow_results_tl_tf.items():
+            print(f"{element_name}:")
+            print(f"  Type:     {data['type']}")
+            print(f"  From Bus: {data['from_bus']}")
+            print(f"  To Bus:   {data['to_bus']}")
+
+        for element_name, data in flow_results_g_l.items():
+            print(f"{element_name}:")
+            print(f"  Type:     {data['type']}")
+            print(f"  From Bus: {data['from_bus']}")
+            # generators/loads use 'to' instead of 'to_bus'
+            print(f"  To Bus:   {data['to']}")
+
+    def print_post_solve_diagnostics(self, title="Solved State Diagnostics"):
+        """
+        Centralized post-solve reporting so every test case prints the same diagnostics.
+        """
+        self.refresh_objects()
+        self.print_current_bus_state(title)
+        self.print_mismatch()
+        self.print_jacobian()
+        self.print_power_flow_direction()
 
     # ---------------------------------------------------------
     # SAFE SOLVE
@@ -178,7 +226,7 @@ class SolverTest:
         3. Open the breaker(s).
         4. Rebuild topology.
         5. Re-solve from the pre-open operating point (flat_start=False).
-        6. Print results.
+        6. Print results + diagnostics.
         """
         self.build_default_circuit()
         self.reset_default_model()
@@ -214,7 +262,9 @@ class SolverTest:
 
         # Step 5 & 6: Re-solve and print
         result = self.safe_solve(title=title, flat_start=False)
-        self.print_current_bus_state(f"Solved Bus State: {title}")
+        if result is not None:
+            self.print_post_solve_diagnostics(f"Solved Bus State: {title}")
+
         return result
 
     def solve_before_start_contingency(self, breaker_names, title):
@@ -223,6 +273,7 @@ class SolverTest:
         1. build default circuit
         2. open breaker(s)
         3. solve from flat start
+        4. print diagnostics
         """
         self.build_default_circuit()
         self.reset_default_model()
@@ -235,7 +286,9 @@ class SolverTest:
         self.print_ybus()
 
         result = self.safe_solve(title=title, flat_start=True)
-        self.print_current_bus_state(f"Solved Bus State: {title}")
+        if result is not None:
+            self.print_post_solve_diagnostics(f"Solved Bus State: {title}")
+
         return result
 
     # ---------------------------------------------------------
@@ -254,7 +307,8 @@ class SolverTest:
         self.print_ybus()
 
         result = self.safe_solve(title="Base Case", flat_start=True)
-        self.print_current_bus_state("Solved Bus State: Base Case")
+        if result is not None:
+            self.print_post_solve_diagnostics("Solved Bus State: Base Case")
         return result
 
     def solve_tl2_open_running(self):
@@ -321,8 +375,7 @@ class SolverTest:
         print("\n===================================================")
         print("SOLVE CASE 11: T2 OPEN WHILE RUNNING")
         print("===================================================")
-        # Match your reference style more closely:
-        # open T2, disconnect G2, disconnect L1
+        # Match reference style more closely: open T2, disconnect G2, disconnect L1
         return self.solve_running_contingency(["BR_T2", "BR_G2", "BR_L1"], "T2 Open While Running")
 
     def solve_t2_open_before_start(self):
