@@ -57,7 +57,7 @@ def main():
             # -------------------------------------------------
             # RESOLVE IF NEEDED
             # -------------------------------------------------
-            result = solver.resolve_if_needed()
+            result = solver.resolve()
 
             # -------------------------------------------------
             # UPDATE LEDS EVERY LOOP
