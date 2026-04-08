@@ -2,7 +2,7 @@ from rpi_ws281x import PixelStrip, Color
 
 
 class LEDManager:
-    def __init__(self, led_count=174, pin=18, brightness=100):
+    def __init__(self, led_count=174, pin=18, brightness=15):
         self.strip = PixelStrip(
             led_count,
             pin,
