@@ -1,12 +1,13 @@
 from settings import SETTINGS
 
 class Generator:
-    def __init__(self, name:str, bus1_name:str, voltage_setpoint:float, mw_setpoint:float):
+    def __init__(self, name:str, bus1_name:str, voltage_setpoint:float, mw_setpoint:float, x_sub_reactance: float):
         self.name = name
         self.bus1_name = bus1_name
         self.voltage_setpoint = voltage_setpoint
         self.mw_setpoint = mw_setpoint
         self.p = self.calc_p()
+        self.x_sub_reactance = x_sub_reactance
 
 
     def calc_p(self):

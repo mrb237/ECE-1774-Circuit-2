@@ -42,9 +42,9 @@ class Circuit:
         self.transmission_lines[name] = transmissionlineobj
         return transmissionlineobj
 
-    def add_generator(self, name: str, bus1_name: str, voltage_setpoint: float, mw_setpoint: float):
+    def add_generator(self, name: str, bus1_name: str, voltage_setpoint: float, mw_setpoint: float, x_sub_reactance: float):
         self.duplicate_name(self.generators, name, 'Generator')
-        generatorobj = Generator(name, bus1_name, voltage_setpoint, mw_setpoint)
+        generatorobj = Generator(name, bus1_name, voltage_setpoint, mw_setpoint, x_sub_reactance )
         self.generators[name] = generatorobj
         return generatorobj
 
@@ -161,9 +161,42 @@ class Circuit:
             #test = np.array(power_mismatches + reactive_mismatches)
         return np.array(power_mismatches + reactive_mismatches)
 
+    def calc_ybus_fault(self):
+        self.calc_ybus()
+        bus_mapping = {name: bus.bus_index for name, bus in self.buses.items()}
+
+        bus_names = list(bus_mapping.keys())
+        ybus_array = self.ybus.values.copy()
+
+        for gen in self.generators.values():
+            if gen.x_sub_reactance == 0.0:
+                continue
+
+            i = bus_mapping[gen.bus1_name]
+            y_gen = 1/ (1j * gen.x_sub_reactance)
+            ybus_array[i, i] += y_gen
+
+        self.ybus = pd.DataFrame(ybus_array, columns=bus_names, index=bus_names)
+
+    def calc_zbus(self):
+        if self.ybus is None:
+            raise ValueError("ybus not calculated")
+
+        bus_names = list(self.buses.keys())
+
+        ybus_array = self.ybus.values
+        zbus_array = np.linalg.inv(ybus_array)
+
+        self.zbus = pd.DataFrame(zbus_array, columns=bus_names, index=bus_names)
+
+        return self.zbus
+
 
 if __name__ == "__main__":
     # 5 Bus Validation
+    from jacobian import Jacobian
+    from power_flow import PowerFlow
+
     c1 = Circuit("Test Circuit")
     Bus.index_counter = 0
 
@@ -180,8 +213,8 @@ if __name__ == "__main__":
     c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
     c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
 
-    c1.add_generator("G1", "Bus1", 1.00, 0.0)
-    c1.add_generator("G2", "Bus3", 1.05, 520.0)
+    c1.add_generator("G1", "Bus1", 1.00, 0.0, 0.0)
+    c1.add_generator("G2", "Bus3", 1.05, 520.0, 0.0)
     # Old:
     # c1.add_generator("G1", "Bus1", 1.04, 0.0)     # Slack bus, MW not used directly in mismatch
     # c1.add_generator("G2", "Bus4", 1.01, 400.0)   # Example PV generator
@@ -191,11 +224,68 @@ if __name__ == "__main__":
     c1.add_load("L2", "Bus2", 800.0, 280.0)
 
     c1.calc_ybus()
-
     print("Ybus:\n")
     print(c1.ybus)
 
-    # Converged Case
+    # Compute mismatch vector
+    mismatch = c1.compute_power_mismatch()
+
+    print("\n Array Mistmatch")
+    print(mismatch)
+
+    angle_dict = {
+        "Bus1": c1.buses["Bus1"].delta,
+        "Bus2": c1.buses["Bus2"].delta,
+        "Bus3": c1.buses["Bus3"].delta,
+        "Bus4": c1.buses["Bus4"].delta,
+        "Bus5": c1.buses["Bus5"].delta,
+    }
+
+    voltage_dict = {
+        "Bus1": c1.buses["Bus1"].vpu,
+        "Bus2": c1.buses["Bus2"].vpu,
+        "Bus3": c1.buses["Bus3"].vpu,
+        "Bus4": c1.buses["Bus4"].vpu,
+        "Bus5": c1.buses["Bus5"].vpu,
+    }
+
+    J = Jacobian(c1)
+    jacobian_matrix = J.calc_jacobian(
+        buses=c1.buses,
+        ybus=c1.ybus,
+        angles=angle_dict,
+        voltages=voltage_dict
+    )
+    print("\nJacobian Matrix:\n")
+    print(jacobian_matrix)
+
+    pf = PowerFlow(c1, J, mode="power_flow")
+    NR = pf.run_type(tol = 0.001, max_iter = 50)
+
+    print("\nNewton-Raphson Results:\n")
+    print(f"Converged: {NR['converged']}")
+    print(f"Iterations: {NR['iterations']}\n")
+
+    for bus_name, data in NR["bus_data"].items():
+        print(f"{bus_name}:")
+        print(f"   Voltage (pu): {data['vpu']:.6f}")
+        print(f"   Angle (deg):  {data['delta']:.6f}\n")
+
+    # fault study starts here, outside the loop
+    print("\n" + "=" * 50)
+    print("FAULT STUDY")
+    print("=" * 50)
+
+    pf_fault = PowerFlow(c1, J, mode="fault")
+
+    for fault_bus in c1.buses.keys():
+        fault_result = pf_fault.run_type(fault_bus=fault_bus, vf=1.0)
+        pf_fault.print_fault_results(fault_result)
+
+
+
+    """
+     # Converged Case
     c1.buses["Bus1"].vpu = 1.00000
     c1.buses["Bus1"].delta = 0.0000010000
 
@@ -210,14 +300,7 @@ if __name__ == "__main__":
 
     c1.buses["Bus5"].vpu = 1.0105737711
     c1.buses["Bus5"].delta = -3.2050233851
-
-    # Compute mismatch vector
-    mismatch = c1.compute_power_mismatch()
-
-    print("\n Array Mistmatch")
-    print(mismatch)
-
-    """
+    
     # After one iteration
     c1.buses["Bus1"].vpu = 1.0000000000
     c1.buses["Bus1"].delta = 0.00

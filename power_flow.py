@@ -3,12 +3,23 @@ from circuit import Circuit
 from jacobian import Jacobian
 
 class PowerFlow:
-    def __init__(self, circuit: Circuit, jacobian: Jacobian):
+
+    MODE_TYPES = {"power_flow", "fault"}
+    def __init__(self, circuit: Circuit, jacobian: Jacobian, mode: str = "power_flow"):
         self.circuit = circuit
         self.jacobian = jacobian
         self.tol = 0.001
         self.max_iter = 50
 
+        if mode not in self.MODE_TYPES:
+            raise ValueError("Invalid mode")
+        self.mode = mode
+
+    def run_type(self, **kwargs):
+        if self.mode == "power_flow":
+            return self.solve(**kwargs)
+        elif self.mode == "fault":
+            return self.solve_fault(**kwargs)
 
     def solve(self, tol, max_iter):
         self.circuit.calc_ybus()
@@ -65,8 +76,45 @@ class PowerFlow:
                 for bus in self.circuit.buses.values()
             }
         }
+    def solve_fault(self, fault_bus: str, vf: float = 1.0):
+        # Step 1: build faulted Ybus and Zbus
+        self.circuit.calc_ybus_fault()
+        self.circuit.calc_zbus()
 
+        # Step 2: validate fault bus
+        if fault_bus not in self.circuit.buses:
+            raise ValueError(f"Bus '{fault_bus}' not found in circuit.")
 
+        # Step 3: extract Znn
+        Znn = self.circuit.zbus.loc[fault_bus, fault_bus]
+
+        # Step 4: calculate fault current
+        I_fault = vf / Znn
+
+        # Step 5: calculate post-fault voltage at every bus
+        bus_voltages = {}
+        for bus_name in self.circuit.buses.keys():
+            Zkn = self.circuit.zbus.loc[bus_name, fault_bus]
+            Ek = 1 - (Zkn / Znn) * vf
+            bus_voltages[bus_name] = Ek
+
+        return {
+            "fault_bus": fault_bus,
+            "vf": vf,
+            "Znn": Znn,
+            "I_fault": I_fault,
+            "bus_voltages": bus_voltages
+        }
+
+    def print_fault_results(self, fault_results: dict):
+        print(f"\nFault Study Results:")
+        print(f"  Faulted Bus:    {fault_results['fault_bus']}")
+        print(f"  Pre-fault V:    {fault_results['vf']} pu")
+        print(f"  Znn:            {fault_results['Znn']:.5f}")
+        print(f"  Fault Current:  {fault_results['I_fault']:.5f} pu\n")
+        print(f"  Post-Fault Bus Voltages:")
+        for bus_name, voltage in fault_results["bus_voltages"].items():
+            print(f"    {bus_name}: {abs(voltage):.5f} pu")
 if __name__ == '__main__':
     from bus import Bus
     from circuit import Circuit
@@ -88,8 +136,8 @@ if __name__ == '__main__':
     c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
     c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
 
-    c1.add_generator("G1", "Bus1", 1.00, 0.0)
-    c1.add_generator("G2", "Bus3", 1.05, 520.0)
+    c1.add_generator("G1", "Bus1", 1.00, 0.0, 0.0)
+    c1.add_generator("G2", "Bus3", 1.05, 520.0, 0.0)
 
     c1.add_load("L1", "Bus3", 80.0, 40.0)
     c1.add_load("L2", "Bus2", 800.0, 280.0)
