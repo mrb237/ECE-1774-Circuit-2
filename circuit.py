@@ -277,6 +277,7 @@ if __name__ == "__main__":
     print("=" * 50)
 
     pf_fault = PowerFlow(c1, J, mode="fault")
+    print(c1.calc_zbus())
 
     for fault_bus in c1.buses.keys():
         fault_result = pf_fault.run_type(fault_bus=fault_bus, vf=1.0)
