@@ -5,58 +5,63 @@ from solver_engine import SolverEngine
 from led_manager import LEDManager
 
 
-# -----------------------------------------
-# Breaker GPIO mapping
-# These are OUTPUT pins that reflect breaker states
-# HIGH = breaker open
-# LOW  = breaker closed
-# -----------------------------------------
-BREAKER_OUTPUT_GPIO_MAP = {
-    1: 4,    # G1
-    2: 17,   # T1
-    3: 27,   # TL1
-    4: 22,   # T2
-    5: 23,   # G2 + L1
-    6: 24,   # TL3
-    7: 25,   # L2
-    8: 21    # TL2
-}
-
-# -----------------------------------------
-# Manual switch input
-# GPIO 26 controls TL3 only
-# -----------------------------------------
-TL3_SWITCH_PIN = 26
-TL3_BREAKER_NUM = 6
+# -----------------------------
+# GPIO pins
+# -----------------------------
+TL3_SWITCH_PIN = 26   # input switch
+TL3_OUTPUT_PIN = 24   # output signal
+TL3_BREAKER_NAME = "BR_TL3"
 
 
 def setup_gpio():
     GPIO.setmode(GPIO.BCM)
 
-    # Breaker state outputs
-    for pin in BREAKER_OUTPUT_GPIO_MAP.values():
-        GPIO.setup(pin, GPIO.OUT)
-        GPIO.output(pin, GPIO.LOW)
-
-    # Manual switch input for TL3
+    # Input switch for TL3
     GPIO.setup(TL3_SWITCH_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+    # Output pin for TL3 breaker state
+    GPIO.setup(TL3_OUTPUT_PIN, GPIO.OUT)
+    GPIO.output(TL3_OUTPUT_PIN, GPIO.LOW)
 
 
 def cleanup_gpio():
     GPIO.cleanup()
 
 
-def push_breaker_outputs(solver):
+def set_tl3_breaker_from_switch(circuit):
     """
-    Reflect software breaker states to GPIO outputs.
-    HIGH = breaker open
-    LOW  = breaker closed
-    """
-    breaker_states = solver.get_breaker_number_states()
+    GPIO 26 HIGH  -> open TL3
+    GPIO 26 LOW   -> close TL3
 
-    for breaker_num, pin in BREAKER_OUTPUT_GPIO_MAP.items():
-        is_closed = breaker_states[breaker_num]
-        GPIO.output(pin, GPIO.LOW if is_closed else GPIO.HIGH)
+    Returns True if breaker state changed, else False.
+    """
+    desired_closed = not bool(GPIO.input(TL3_SWITCH_PIN))
+    breaker = circuit.breakers[TL3_BREAKER_NAME]
+    current_closed = breaker.is_closed
+
+    if desired_closed != current_closed:
+        if desired_closed:
+            breaker.close()
+            print("TL3 closed from GPIO 26")
+        else:
+            breaker.open()
+            print("TL3 opened from GPIO 26")
+        return True
+
+    return False
+
+
+def update_tl3_output_pin(circuit):
+    """
+    GPIO 24 HIGH when TL3 breaker is open
+    GPIO 24 LOW when TL3 breaker is closed
+    """
+    breaker = circuit.breakers[TL3_BREAKER_NAME]
+
+    if breaker.is_closed:
+        GPIO.output(TL3_OUTPUT_PIN, GPIO.LOW)
+    else:
+        GPIO.output(TL3_OUTPUT_PIN, GPIO.HIGH)
 
 
 def main():
@@ -69,66 +74,61 @@ def main():
 
     setup_gpio()
 
-    # -----------------------------------------
-    # Solve base case once
-    # -----------------------------------------
-    solver.solve_base_case()
-
-    # Push initial breaker outputs
-    push_breaker_outputs(solver)
-
-    # Initial LED update
-    flow_data = solver.get_led_flow_data()
-    leds.update_from_flows(flow_data)
-
-    print("Running TL3 switch + breaker output + LED test loop. Ctrl+C to stop.")
-
     try:
-        last_switch_state = GPIO.input(TL3_SWITCH_PIN)
+        # ---------------------------------
+        # Build and solve base case once
+        # ---------------------------------
+        solver.build_default_circuit()
+        solver.solve(
+            flat_start=True,
+            print_diagnostics=True,
+            title="Base Case"
+        )
+
+        # Set GPIO 24 from initial TL3 state
+        update_tl3_output_pin(solver.circuit)
+
+        # Initial LED update
+        flow_data = solver.get_led_flow_data()
+        leds.update_from_flows(flow_data)
+
+        print("Running TL3 switch / GPIO / LED test. Press Ctrl+C to stop.")
 
         while True:
-            current_switch_state = GPIO.input(TL3_SWITCH_PIN)
+            topology_changed = False
 
-            # -----------------------------------------
-            # GPIO 26 switch controls TL3
-            # HIGH = open TL3
-            # LOW  = close TL3
-            # -----------------------------------------
-            if current_switch_state != last_switch_state:
-                desired_closed = not bool(current_switch_state)
+            # ---------------------------------
+            # Check GPIO 26 and update TL3
+            # ---------------------------------
+            if set_tl3_breaker_from_switch(solver.circuit):
+                topology_changed = True
+                solver.refresh_objects()
 
-                print(
-                    f"TL3 switch changed on GPIO {TL3_SWITCH_PIN}: "
-                    f"{'closing' if desired_closed else 'opening'} TL3"
-                )
-
-                solver.set_breaker_number(TL3_BREAKER_NUM, desired_closed)
-
+            # ---------------------------------
+            # Re-solve if TL3 changed
+            # ---------------------------------
+            if topology_changed:
                 solver.solve(
                     flat_start=False,
                     print_diagnostics=True,
-                    title="TL3 Switch Change Solve"
+                    title="TL3 Change Solve"
                 )
 
-                # Update physical breaker output pins
-                push_breaker_outputs(solver)
+            # ---------------------------------
+            # Update GPIO 24 from TL3 state
+            # ---------------------------------
+            update_tl3_output_pin(solver.circuit)
 
-                # Update LEDs from solved flow data
-                flow_data = solver.get_led_flow_data()
-                leds.update_from_flows(flow_data)
-
-                last_switch_state = current_switch_state
-
-            # -----------------------------------------
-            # Keep LED animation moving continuously
-            # -----------------------------------------
+            # ---------------------------------
+            # Update addressable LEDs
+            # ---------------------------------
             flow_data = solver.get_led_flow_data()
             leds.update_from_flows(flow_data)
 
             time.sleep(0.15)
 
     except KeyboardInterrupt:
-        print("Stopping...")
+        print("Stopping test...")
 
     finally:
         leds.clear()
