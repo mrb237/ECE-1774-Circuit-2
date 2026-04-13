@@ -5,15 +5,22 @@ from solver_engine import SolverEngine
 from led_manager import LEDManager
 
 
-# ---------------------------------------------------------
-# GPIO CONFIG
-# ---------------------------------------------------------
-TL3_INPUT_PIN = 26   # <-- CHANGED TO GPIO 26
+BREAKER_GPIO_MAP = {
+    1: 4,
+    2: 17,
+    3: 27,
+    4: 22,
+    5: 23,
+    6: 24,
+    7: 25,
+    8: 21 # Change
+}
 
 
 def setup_gpio():
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(TL3_INPUT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    for pin in BREAKER_GPIO_MAP.values():
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 
 def cleanup_gpio():
@@ -26,51 +33,46 @@ def main():
 
     setup_gpio()
 
-    # Base case already solved
+    # Solve base case once
+    solver.solve_base_case()
     leds.update_from_flows(solver.get_led_flow_data())
-    solver.print_led_flow_summary()
 
-    print("\nRunning Pi solver + LED loop. Press Ctrl+C to stop.")
-    print(f"Monitoring GPIO {TL3_INPUT_PIN} for TL3 breaker control.")
+    print("Running continuous breaker + LED loop. Ctrl+C to stop.")
 
     try:
         while True:
-            # -------------------------------------------------
-            # GPIO -> BREAKER LOGIC
-            # -------------------------------------------------
-            tl3_high = GPIO.input(TL3_INPUT_PIN)
+            topology_changed = False
 
-            # HIGH = open breaker
-            # LOW  = closed breaker
-            desired_closed = not bool(tl3_high)
+            current_states = solver.get_breaker_number_states()
 
-            current_closed = solver.circuit.breakers["BR_TL3"].is_closed
+            for breaker_num, pin in BREAKER_GPIO_MAP.items():
+                pin_high = GPIO.input(pin)
 
-            if current_closed != desired_closed:
-                if desired_closed:
-                    print(f"\nGPIO {TL3_INPUT_PIN} LOW -> closing BR_TL3")
-                else:
-                    print(f"\nGPIO {TL3_INPUT_PIN} HIGH -> opening BR_TL3")
+                # HIGH = open, LOW = closed
+                desired_closed = not bool(pin_high)
+                current_closed = current_states[breaker_num]
 
-                solver.set_breaker("BR_TL3", desired_closed)
+                if current_closed != desired_closed:
+                    print(
+                        f"Breaker {breaker_num}: "
+                        f"{'closing' if desired_closed else 'opening'}"
+                    )
+                    solver.set_breaker_number(breaker_num, desired_closed)
+                    topology_changed = True
 
-            # -------------------------------------------------
-            # RESOLVE IF NEEDED
-            # -------------------------------------------------
-            result = solver.resolve()
+            if topology_changed:
+                solver.solve(
+                    flat_start=False,
+                    print_diagnostics=True,
+                    title="Breaker Change Solve"
+                )
 
-            # -------------------------------------------------
-            # UPDATE LEDS EVERY LOOP
-            # -------------------------------------------------
             leds.update_from_flows(solver.get_led_flow_data())
-
-            if result is not None:
-                solver.print_led_flow_summary()
 
             time.sleep(0.15)
 
     except KeyboardInterrupt:
-        print("\nStopping...")
+        print("Stopping...")
 
     finally:
         leds.clear()
