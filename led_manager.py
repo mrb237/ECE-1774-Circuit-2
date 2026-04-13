@@ -15,15 +15,15 @@ class LEDManager:
         self.strip.begin()
 
         self.element_map = {
-            "G1": list(range(0, 10)),
-            "T1": list(range(10, 20)),
-            "TL1": list(range(20, 30)),
-            "T2": list(range(30, 40)),
-            "G2": list(range(40, 50)),
-            "L1": list(range(50, 60)),
-            "TL3": list(range(60, 70)),
-            "L2": list(range(70, 80)),
-            "TL2": list(range(80, 90)),
+            "G1": list(range(0, 6)),
+            "T1": list(range(6, 12)),
+            "TL1": list(range(12, 18)),
+            "T2": list(range(18, 24)),
+            "G2": list(range(24, 30)),
+            "L1": list(range(30, 36)),
+            "TL3": list(range(36, 42)),
+            "L2": list(range(42, 48)),
+            "TL2": list(range(48, 54)),
         }
 
         self.off_color = (0, 0, 0)

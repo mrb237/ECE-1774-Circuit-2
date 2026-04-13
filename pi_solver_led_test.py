@@ -13,7 +13,7 @@ BREAKER_GPIO_MAP = {
     5: 23,
     6: 24,
     7: 25,
-    8: 21 # Change
+    8: 5 # Change
 }
 
 
