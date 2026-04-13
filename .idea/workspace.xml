@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="solver_engine + led_manager + pi_solver_led_test integration">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pi_solver_led_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pi_solver_led_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -157,6 +157,7 @@
       <workItem from="1775762260142" duration="2610000" />
       <workItem from="1775850493648" duration="388000" />
       <workItem from="1776097825808" duration="1533000" />
+      <workItem from="1776103055915" duration="885000" />
     </task>
     <task id="LOCAL-00001" summary="Test">
       <option name="closed" value="true" />
@@ -534,7 +535,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776097942401</updated>
     </task>
-    <option name="localTasksCounter" value="48" />
+    <task id="LOCAL-00048" summary="solver_engine + led_manager + pi_solver_led_test integration">
+      <option name="closed" value="true" />
+      <created>1776103255613</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1776103255613</updated>
+    </task>
+    <option name="localTasksCounter" value="49" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
