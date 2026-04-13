@@ -157,15 +157,7 @@
       <workItem from="1775762260142" duration="2610000" />
       <workItem from="1775850493648" duration="388000" />
       <workItem from="1776097825808" duration="1533000" />
-      <workItem from="1776103055915" duration="885000" />
-    </task>
-    <task id="LOCAL-00001" summary="Test">
-      <option name="closed" value="true" />
-      <created>1770732538225</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1770732538227</updated>
+      <workItem from="1776103055915" duration="2166000" />
     </task>
     <task id="LOCAL-00002" summary="Added gitignore file">
       <option name="closed" value="true" />
@@ -543,7 +535,23 @@
       <option name="project" value="LOCAL" />
       <updated>1776103255613</updated>
     </task>
-    <option name="localTasksCounter" value="49" />
+    <task id="LOCAL-00049" summary="solver_engine + led_manager + pi_solver_led_test integration">
+      <option name="closed" value="true" />
+      <created>1776104668176</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1776104668177</updated>
+    </task>
+    <task id="LOCAL-00050" summary="solver_engine + led_manager + pi_solver_led_test integration">
+      <option name="closed" value="true" />
+      <created>1776104863527</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1776104863541</updated>
+    </task>
+    <option name="localTasksCounter" value="51" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
