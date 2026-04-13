@@ -222,7 +222,7 @@ class SolverEngine:
             if element_name in self.circuit.transmission_lines:
                 rating = self.circuit.transmission_lines[element_name].mva_limit
             elif element_name in self.circuit.transformers:
-                rating = self.circuit.transformers[element_name].mva_limit
+                rating = self.circuit.transformers[element_name].tf_mva_limit
             else:
                 continue
 
@@ -279,7 +279,7 @@ class SolverEngine:
             if element_name in self.circuit.transmission_lines:
                 rating = self.circuit.transmission_lines[element_name].mva_limit
             elif element_name in self.circuit.transformers:
-                rating = self.circuit.transformers[element_name].mva_limit
+                rating = self.circuit.transformers[element_name].tf_mva_limit
             else:
                 continue
 
@@ -431,7 +431,7 @@ class SolverEngine:
             if element_name in self.circuit.transmission_lines:
                 rating = self.circuit.transmission_lines[element_name].mva_limit
             elif element_name in self.circuit.transformers:
-                rating = self.circuit.transformers[element_name].mva_limit
+                rating = self.circuit.transformers[element_name].tf_mva_limit
 
             led_flow_data[element_name] = {
                 "type": data["type"],
