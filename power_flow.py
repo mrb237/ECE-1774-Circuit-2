@@ -74,6 +74,7 @@ class PowerFlow:
             "bus_data": {
                 bus.name: {"vpu": bus.vpu, "delta": bus.delta}
                 for bus in self.circuit.buses.values()
+
             }
         }
     def solve_fault(self, fault_bus: str, vf: float = 1.0):
