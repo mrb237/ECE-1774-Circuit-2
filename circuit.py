@@ -199,7 +199,68 @@ if __name__ == "__main__":
 
     c1 = Circuit("Test Circuit")
     Bus.index_counter = 0
+    c_val = Circuit("2-Bus Validation")
 
+    # Buses
+    c_val.add_bus("Bus1", 138.0, "Slack")
+    c_val.add_bus("Bus2", 138.0, "PQ")
+
+    # Single series path: T1 + Line + T2 combined = j0.10 + j0.105 + j0.10 = j0.305
+    # Modeled as one transmission line with r=0, x=0.305, g=0, b=0
+    c_val.add_transmission_line("T1_Line_T2", "Bus1", "Bus2", 0.0, 0.305, 0.0, 0.0)
+
+    # Generators with subtransient reactance
+    c_val.add_generator("G", "Bus1", 1.0, 0.0, x_sub_reactance=0.15)
+    c_val.add_generator("M", "Bus2", 1.0, 0.0, x_sub_reactance=0.20)
+    # ------------------------------------------------
+    # Print faulted Ybus
+    # ------------------------------------------------
+    c_val.calc_ybus_fault()
+    print("Faulted Ybus:")
+    print(c_val.ybus)
+    print()
+
+    # Expected:
+    # | -j9.9454   j3.2787 |
+    # |  j3.2787  -j8.2787 |
+
+    # ------------------------------------------------
+    # Print Zbus
+    # ------------------------------------------------
+    c_val.calc_zbus()
+    print("Zbus:")
+    print(c_val.zbus)
+    print()
+
+    # Expected:
+    # | j0.11565   j0.04580 |
+    # | j0.04580   j0.13893 |
+
+    # ------------------------------------------------
+    # Fault Study
+    # ------------------------------------------------
+    J_val = Jacobian(c_val)
+    pf_val = PowerFlow(c_val, J_val, mode="fault")
+
+    print("=" * 50)
+    print("FAULT AT BUS1")
+    print("=" * 50)
+    # Expected: I_fault = -j8.6468, E1 = 0.0, E2 = 0.60398
+    result_bus1 = pf_val.run_type(fault_bus="Bus1", vf=1.0)
+    pf_val.print_fault_results(result_bus1)
+
+    print("=" * 50)
+    print("FAULT AT BUS2")
+    print("=" * 50)
+    # Expected: I_fault = -j7.1974, E1 = 0.67015, E2 = 0.0
+    result_bus2 = pf_val.run_type(fault_bus="Bus2", vf=1.0)
+    pf_val.print_fault_results(result_bus2)
+
+
+
+
+
+    """
     c1.add_bus("Bus1", 15.0, "Slack")
     c1.add_bus("Bus2", 345.0, "PQ")
     c1.add_bus("Bus3", 15.0, "PV")
@@ -213,8 +274,8 @@ if __name__ == "__main__":
     c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
     c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
 
-    c1.add_generator("G1", "Bus1", 1.00, 0.0, 0.0)
-    c1.add_generator("G2", "Bus3", 1.05, 520.0, 0.0)
+    c1.add_generator("G1", "Bus1", 1.00, 0.0, 0.15)
+    c1.add_generator("G2", "Bus3", 1.05, 520.0, 0.20)
     # Old:
     # c1.add_generator("G1", "Bus1", 1.04, 0.0)     # Slack bus, MW not used directly in mismatch
     # c1.add_generator("G2", "Bus4", 1.01, 400.0)   # Example PV generator
@@ -283,7 +344,7 @@ if __name__ == "__main__":
         fault_result = pf_fault.run_type(fault_bus=fault_bus, vf=1.0)
         pf_fault.print_fault_results(fault_result)
 
-
+"""
 
     """
      # Converged Case
