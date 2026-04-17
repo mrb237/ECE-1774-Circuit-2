@@ -3,6 +3,7 @@ from typing import Dict
 from bus import Bus
 from generator import Generator
 from load import Load
+from settings import SETTINGS
 from transformer import Transformer
 from transmission_line import TransmissionLine
 import numpy as np
@@ -18,6 +19,7 @@ class Circuit:
         self.generators: Dict[str, Generator] = {}
         self.loads: Dict[str, Load] = {}
         self.ybus = None
+        self.bbus = None
 
     @staticmethod
     def duplicate_name(d: dict, name: str, equipment_type: str):
@@ -42,9 +44,10 @@ class Circuit:
         self.transmission_lines[name] = transmissionlineobj
         return transmissionlineobj
 
-    def add_generator(self, name: str, bus1_name: str, voltage_setpoint: float, mw_setpoint: float, x_sub_reactance: float):
+    def add_generator(self, name: str, bus1_name: str, voltage_setpoint: float, mw_setpoint: float, x_sub_reactance: float,
+                      cost_a: float, cost_b: float, cost_c: float, p_min: float, p_max: float):
         self.duplicate_name(self.generators, name, 'Generator')
-        generatorobj = Generator(name, bus1_name, voltage_setpoint, mw_setpoint, x_sub_reactance )
+        generatorobj = Generator(name, bus1_name, voltage_setpoint, mw_setpoint, x_sub_reactance, cost_a, cost_b, cost_c, p_min, p_max )
         self.generators[name] = generatorobj
         return generatorobj
 
@@ -191,6 +194,20 @@ class Circuit:
 
         return self.zbus
 
+    def update_dispatch(self, dispatch: dict):
+        for gen_name, mw in dispatch.items():
+            gen = self.generators[gen_name]
+            gen.mw_setpoint = mw
+            gen.p = mw / SETTINGS.sbase
+
+    def calc_B(self):
+        if self.ybus is None:
+            raise ValueError("ybus not calculated")
+        bus_names = list(self.buses.keys())
+        B = self.ybus.values.imag
+        self.bbus = pd.DataFrame(B, columns=bus_names, index=bus_names)
+        return self.bbus
+
 
 if __name__ == "__main__":
     # 5 Bus Validation
@@ -210,7 +227,7 @@ if __name__ == "__main__":
     c_val.add_transmission_line("T1_Line_T2", "Bus1", "Bus2", 0.0, 0.305, 0.0, 0.0)
 
     # Generators with subtransient reactance
-    c_val.add_generator("G", "Bus1", 1.0, 0.0, x_sub_reactance=0.15)
+    c_val.add_generator("G1", "Bus1", 1.0, 0.0, x_sub_reactance=0.15)
     c_val.add_generator("M", "Bus2", 1.0, 0.0, x_sub_reactance=0.20)
     # ------------------------------------------------
     # Print faulted Ybus
