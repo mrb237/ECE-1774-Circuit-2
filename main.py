@@ -90,8 +90,6 @@ def main():
             fault_result = pf_fault.run_type(fault_bus=fault_bus, vf=1.0)
             pf_fault.print_fault_results(fault_result)
 
-
-
 main()
 
 
