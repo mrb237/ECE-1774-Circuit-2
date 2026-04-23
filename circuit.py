@@ -100,10 +100,10 @@ class Circuit:
             self.ybus[j, j] += (Yprim_tl.iloc[1, 1])
         # Converting an array to a Dataframe matrix
 
-        # ybus_rounded = self.ybus.round(2)
+        ybus_rounded = self.ybus.round(2)
         # self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
-        self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
+        self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
     def compute_power_injection(self, bus):
         # Bus indecies
@@ -164,6 +164,21 @@ class Circuit:
             #test = np.array(power_mismatches + reactive_mismatches)
         return np.array(power_mismatches + reactive_mismatches)
 
+    def power_mismatch_formatter(self, mismatch: float):
+        print("\nStructured Mismatch Output:")
+        index = 0
+        for bus in self.buses.values():
+            if bus.bus_type == "Slack":
+                continue
+
+            print(f"ΔP at {bus.name}: {mismatch[index]:.6f}")
+            index += 1
+
+            if bus.bus_type == "PQ":
+                print(f"ΔQ at {bus.name}: {mismatch[index]:.6f}")
+                index += 1
+
+
     def calc_ybus_fault(self):
         self.calc_ybus()
         bus_mapping = {name: bus.bus_index for name, bus in self.buses.items()}
@@ -210,6 +225,7 @@ class Circuit:
 
 
 if __name__ == "__main__":
+    """
     # 5 Bus Validation
     from jacobian import Jacobian
     from power_flow import PowerFlow
@@ -272,12 +288,12 @@ if __name__ == "__main__":
     # Expected: I_fault = -j7.1974, E1 = 0.67015, E2 = 0.0
     result_bus2 = pf_val.run_type(fault_bus="Bus2", vf=1.0)
     pf_val.print_fault_results(result_bus2)
+"""
+    from jacobian import Jacobian
+    from power_flow import PowerFlow
 
+    c1 = Circuit("Test Circuit")
 
-
-
-
-    """
     c1.add_bus("Bus1", 15.0, "Slack")
     c1.add_bus("Bus2", 345.0, "PQ")
     c1.add_bus("Bus3", 15.0, "PV")
@@ -291,8 +307,8 @@ if __name__ == "__main__":
     c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
     c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
 
-    c1.add_generator("G1", "Bus1", 1.00, 0.0, 0.15)
-    c1.add_generator("G2", "Bus3", 1.05, 520.0, 0.20)
+    c1.add_generator("G1", "Bus1", 1.00, 0.0, 0.15, 0.0, 0.0, 0.0, 0.0, 0.0)
+    c1.add_generator("G2", "Bus3", 1.05, 520.0, 0.20, 0.0, 0.0, 0.0, 0.0, 0.0)
     # Old:
     # c1.add_generator("G1", "Bus1", 1.04, 0.0)     # Slack bus, MW not used directly in mismatch
     # c1.add_generator("G2", "Bus4", 1.01, 400.0)   # Example PV generator
@@ -348,7 +364,7 @@ if __name__ == "__main__":
         print(f"{bus_name}:")
         print(f"   Voltage (pu): {data['vpu']:.6f}")
         print(f"   Angle (deg):  {data['delta']:.6f}\n")
-
+"""
     # fault study starts here, outside the loop
     print("\n" + "=" * 50)
     print("FAULT STUDY")
@@ -360,10 +376,10 @@ if __name__ == "__main__":
     for fault_bus in c1.buses.keys():
         fault_result = pf_fault.run_type(fault_bus=fault_bus, vf=1.0)
         pf_fault.print_fault_results(fault_result)
-
 """
 
-    """
+
+"""
      # Converged Case
     c1.buses["Bus1"].vpu = 1.00000
     c1.buses["Bus1"].delta = 0.0000010000
@@ -417,9 +433,9 @@ if __name__ == "__main__":
             index += 1
 
     print("Ko")
-    """
+"""
 
-    """
+"""
     #Checking Circuit Class Functionality
     circuit1 = Circuit("Test Circuit")
 
@@ -456,4 +472,4 @@ if __name__ == "__main__":
     circuit1.add_generator("G1", "Bus 1", 1.04, 100)
     print(list(circuit1.generators.keys()))
     print(circuit1.generators["G1"].name, circuit1.generators["G1"].bus1_name, circuit1.generators["G1"].voltage_setpoint, circuit1.generators["G1"].mw_setpoint)
-    """
+"""

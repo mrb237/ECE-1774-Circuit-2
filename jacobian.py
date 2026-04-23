@@ -194,8 +194,8 @@ if __name__ == "__main__":
     c1.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
     c1.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
 
-    c1.add_generator("G1", "Bus1", 1.00, 0.0)
-    c1.add_generator("G2", "Bus3", 1.05, 520.0)
+    c1.add_generator("G1", "Bus1", 1.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    c1.add_generator("G2", "Bus3", 1.05, 520.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
     c1.add_load("L1", "Bus3", 80.0, 40.0)
     c1.add_load("L2", "Bus2", 800.0, 280.0)

@@ -84,6 +84,17 @@ class PowerFlow:
                 for bus in self.circuit.buses.values()
             }
         }
+    def print_NF_result(self, NR: dict):
+        print("\nNewton-Raphson Results:\n")
+        print(f"Converged: {NR['converged']}")
+        print(f"Iterations: {NR['iterations']}\n")
+
+        for bus_name, data in NR["bus_data"].items():
+            print(f"{bus_name}:")
+            print(f"   Voltage (pu): {data['vpu']:.6f}")
+            print(f"   Angle (deg):  {data['delta']:.6f}\n")
+
+
     def solve_fault(self, fault_bus: str, vf: float = 1.0):
         # Step 1: build faulted Ybus and Zbus
         self.circuit.calc_ybus_fault()
