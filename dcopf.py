@@ -10,9 +10,7 @@ class DCOPF:
         self.result = None
 
     def solve(self):
-        # --------------------------------------------------
         # Setup
-        # --------------------------------------------------
 
         self.circuit.calc_ybus()
         self.circuit.calc_B()
@@ -43,9 +41,7 @@ class DCOPF:
 
         B = self.circuit.bbus.values
 
-        # --------------------------------------------------
-        # Objective Function — generator outputs in per-unit
-        # --------------------------------------------------
+        # Objective Function: generator outputs in per-unit
         def objective(x):
             Pg_pu = x[:G]
             total_cost = 0.0
@@ -54,9 +50,7 @@ class DCOPF:
                 total_cost += gen.cost_a + gen.cost_b * Pg_mw + gen.cost_c * Pg_mw ** 2
             return total_cost
 
-        # --------------------------------------------------
         # Constraints
-        # --------------------------------------------------
         constraints = []
 
 
@@ -76,9 +70,7 @@ class DCOPF:
 
         constraints.append({"type": "eq", "fun": slack_angle})
 
-        # --------------------------------------------------
         # Bounds — generators in per-unit, angles in radians
-        # --------------------------------------------------
         bounds = []
 
         for gen in generators:
@@ -87,9 +79,7 @@ class DCOPF:
         for _ in range(N):
             bounds.append((-np.pi / 2, np.pi / 2))
 
-        # --------------------------------------------------
-        # Initial guess
-        # --------------------------------------------------
+        # Intial Guess
         total_load_pu = load_per_bus_pu.sum()
         x0 = np.zeros(num_vars)
 
@@ -99,9 +89,7 @@ class DCOPF:
                             gen.mw_setpoint / SETTINGS.sbase if gen.mw_setpoint > 0
                             else total_load_pu / G))
 
-        # --------------------------------------------------
         # Solve
-        # --------------------------------------------------
         result = minimize(
             objective,
             x0,
@@ -114,9 +102,7 @@ class DCOPF:
         if not result.success:
             raise ValueError(f"DC OPF did not converge: {result.message}")
 
-        # --------------------------------------------------
         # Extract results — convert back to MW
-        # --------------------------------------------------
         Pg_opt_pu = result.x[:G]
         Pg_opt_mw = Pg_opt_pu * SETTINGS.sbase
         delta_opt = result.x[G:]
