@@ -5,6 +5,7 @@ from jacobian import Jacobian
 class PowerFlow:
 
     MODE_TYPES = {"power_flow", "fault"}
+
     def __init__(self, circuit: Circuit, jacobian: Jacobian, mode: str = "power_flow"):
         self.circuit = circuit
         self.jacobian = jacobian
@@ -12,7 +13,10 @@ class PowerFlow:
         self.max_iter = 50
 
         if mode not in self.MODE_TYPES:
-            raise ValueError("Invalid mode")
+            raise ValueError(
+                f"Invalid mode '{mode}'. "
+                f"Valid modes are: {self.MODE_TYPES}"
+            )
         self.mode = mode
 
     def run_type(self, **kwargs):
@@ -20,8 +24,11 @@ class PowerFlow:
             return self.solve(**kwargs)
         elif self.mode == "fault":
             return self.solve_fault(**kwargs)
+        elif self.mode == "economic_dispatch":
+            return self.solve_economic_dispatch(**kwargs)
 
-    def solve(self, tol, max_iter):
+
+    def solve(self, tol = 0.001, max_iter = 50):
         self.circuit.calc_ybus()
         jacobian_obj = Jacobian(self.circuit)
         self.converged = False
@@ -76,6 +83,17 @@ class PowerFlow:
                 for bus in self.circuit.buses.values()
             }
         }
+    def print_NF_result(self, NR: dict):
+        print("\nNewton-Raphson Results:\n")
+        print(f"Converged: {NR['converged']}")
+        print(f"Iterations: {NR['iterations']}\n")
+
+        for bus_name, data in NR["bus_data"].items():
+            print(f"{bus_name}:")
+            print(f"   Voltage (pu): {data['vpu']:.6f}")
+            print(f"   Angle (deg):  {data['delta']:.6f}\n")
+
+
     def solve_fault(self, fault_bus: str, vf: float = 1.0):
         # Step 1: build faulted Ybus and Zbus
         self.circuit.calc_ybus_fault()

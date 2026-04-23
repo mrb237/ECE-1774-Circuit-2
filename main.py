@@ -78,6 +78,7 @@ def main():
     print("=" * 50)
 
     pf_fault = PowerFlow(c1, J, mode="fault")
+    print("\n" + "Zbus" )
     print(c1.calc_zbus())
 
     for fault_bus in c1.buses.keys():

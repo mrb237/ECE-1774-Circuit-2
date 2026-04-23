@@ -203,7 +203,6 @@ class Circuit:
 
         ybus_array = self.ybus.values
         zbus_array = np.linalg.inv(ybus_array)
-
         self.zbus = pd.DataFrame(zbus_array, columns=bus_names, index=bus_names)
 
         return self.zbus
