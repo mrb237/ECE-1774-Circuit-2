@@ -3,6 +3,7 @@ from typing import Dict
 from bus import Bus
 from generator import Generator
 from load import Load
+from settings import SETTINGS
 from transformer import Transformer
 from transmission_line import TransmissionLine
 import numpy as np
@@ -18,6 +19,7 @@ class Circuit:
         self.generators: Dict[str, Generator] = {}
         self.loads: Dict[str, Load] = {}
         self.ybus = None
+        self.bbus = None
 
     @staticmethod
     def duplicate_name(d: dict, name: str, equipment_type: str):
@@ -97,10 +99,10 @@ class Circuit:
             self.ybus[j, j] += (Yprim_tl.iloc[1, 1])
         # Converting an array to a Dataframe matrix
 
-        # ybus_rounded = self.ybus.round(2)
+        ybus_rounded = self.ybus.round(2)
         # self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
-        self.ybus = pd.DataFrame(self.ybus, columns=bus_names, index=bus_names)
+        self.ybus = pd.DataFrame(ybus_rounded, columns=bus_names, index=bus_names)
 
     def compute_power_injection(self, bus):
         # Bus indecies
@@ -161,6 +163,21 @@ class Circuit:
             #test = np.array(power_mismatches + reactive_mismatches)
         return np.array(power_mismatches + reactive_mismatches)
 
+    def power_mismatch_formatter(self, mismatch: float):
+        print("\nStructured Mismatch Output:")
+        index = 0
+        for bus in self.buses.values():
+            if bus.bus_type == "Slack":
+                continue
+
+            print(f"ΔP at {bus.name}: {mismatch[index]:.6f}")
+            index += 1
+
+            if bus.bus_type == "PQ":
+                print(f"ΔQ at {bus.name}: {mismatch[index]:.6f}")
+                index += 1
+
+
     def calc_ybus_fault(self):
         self.calc_ybus()
         bus_mapping = {name: bus.bus_index for name, bus in self.buses.items()}
@@ -190,7 +207,6 @@ class Circuit:
         self.zbus = pd.DataFrame(zbus_array, columns=bus_names, index=bus_names)
 
         return self.zbus
-
 
 if __name__ == "__main__":
     # 5 Bus Validation
