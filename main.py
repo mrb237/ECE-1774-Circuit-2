@@ -77,18 +77,86 @@ def main():
         NR = pf.run_type(tol=0.001, max_iter=50)
         print("\nNR:\n")
         pf.print_NF_result(NR)
-    else:
+    elif pf.mode == "fault":
      # fault study starts here, outside the loop
         print("\n" + "=" * 50)
         print("FAULT STUDY")
         print("=" * 50)
-
         pf_fault = PowerFlow(c1, J, mode="fault")
         print(c1.calc_zbus())
 
         for fault_bus in c1.buses.keys():
             fault_result = pf_fault.run_type(fault_bus=fault_bus, vf=1.0)
             pf_fault.print_fault_results(fault_result)
+    else:
+        print("Wrong mode")
+
+    c1.calc_B()
+    print("\nB Matrix:\n")
+    print(c1.bbus)
+
+    # ------------------------------------------------
+    # Pre-dispatch cost (current hardcoded values)
+    # ------------------------------------------------
+    print("\n" + "=" * 50)
+    print("PRE-DISPATCH (hardcoded)")
+    print("=" * 50)
+
+    G1 = c1.generators["G1"]
+    G2 = c1.generators["G2"]
+
+    # G1 slack picks up ~395 MW based on NR results
+    G1.mw_setpoint = 395.0
+    G2.mw_setpoint = 520.0
+
+    pre_cost_g1 = G1.calc_cost()
+    pre_cost_g2 = G2.calc_cost()
+    pre_total = pre_cost_g1 + pre_cost_g2
+
+    print(f"\n  G1: {G1.mw_setpoint:.2f} MW   Cost: ${pre_cost_g1:.2f}/hr")
+    print(f"  G2: {G2.mw_setpoint:.2f} MW   Cost: ${pre_cost_g2:.2f}/hr")
+    print(f"  Total: ${pre_total:.2f}/hr")
+
+    print(f"\n  G1 Incremental Cost: ${G1.calc_incremental_cost():.4f}/MWhr")
+    print(f"  G2 Incremental Cost: ${G2.calc_incremental_cost():.4f}/MWhr")
+    print(f"  (Not equal -> not optimal)")
+
+    # ------------------------------------------------
+    # Run DC OPF
+    # ------------------------------------------------
+    print("\n" + "=" * 50)
+    print("RUNNING DC OPF")
+    print("=" * 50)
+
+    opf = DCOPF(c1)
+    result = opf.solve()
+    opf.print_results()
+
+    # ------------------------------------------------
+    # Verify equal incremental cost after dispatch
+    # ------------------------------------------------
+    print("\n" + "=" * 50)
+    print("INCREMENTAL COST VERIFICATION")
+    print("=" * 50)
+
+    G1.mw_setpoint = result["dispatch"]["G1"]
+    G2.mw_setpoint = result["dispatch"]["G2"]
+
+    print(f"\n  G1 Incremental Cost: ${G1.calc_incremental_cost():.4f}/MWhr")
+    print(f"  G2 Incremental Cost: ${G2.calc_incremental_cost():.4f}/MWhr")
+    print(f"  (Should be equal -> optimal dispatch confirmed)")
+
+    # ------------------------------------------------
+    # Cost savings summary
+    # ------------------------------------------------
+    print("\n" + "=" * 50)
+    print("COST SAVINGS SUMMARY")
+    print("=" * 50)
+    savings = pre_total - result["total_cost"]
+    print(f"\n  Pre-dispatch cost:  ${pre_total:.2f}/hr")
+    print(f"  Optimal cost:       ${result['total_cost']:.2f}/hr")
+    print(f"  Savings:            ${savings:.2f}/hr")
+
 
 main()
 

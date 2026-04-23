@@ -10,6 +10,7 @@ class PowerFlow:
     def __init__(self, circuit: Circuit, jacobian: Jacobian, mode: str = "power_flow"):
         self.circuit = circuit
         self.jacobian = jacobian
+        self.mode = mode
         self.tol = 0.001
         self.max_iter = 50
 
