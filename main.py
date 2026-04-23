@@ -73,21 +73,24 @@ def main():
     formatter_j.print_dataframe(decimals=2)
 
     pf = PowerFlow(c1, J, mode="power_flow")
-    NR = pf.run_type(tol=0.001, max_iter=50)
-    print("\nNR:\n")
-    pf.print_NF_result(NR)
+    if pf.mode == "power_flow":
+        NR = pf.run_type(tol=0.001, max_iter=50)
+        print("\nNR:\n")
+        pf.print_NF_result(NR)
+    else:
+     # fault study starts here, outside the loop
+        print("\n" + "=" * 50)
+        print("FAULT STUDY")
+        print("=" * 50)
 
- # fault study starts here, outside the loop
-    print("\n" + "=" * 50)
-    print("FAULT STUDY")
-    print("=" * 50)
+        pf_fault = PowerFlow(c1, J, mode="fault")
+        print(c1.calc_zbus())
 
-    pf_fault = PowerFlow(c1, J, mode="fault")
-    print(c1.calc_zbus())
+        for fault_bus in c1.buses.keys():
+            fault_result = pf_fault.run_type(fault_bus=fault_bus, vf=1.0)
+            pf_fault.print_fault_results(fault_result)
 
-    for fault_bus in c1.buses.keys():
-        fault_result = pf_fault.run_type(fault_bus=fault_bus, vf=1.0)
-        pf_fault.print_fault_results(fault_result)
+
 
 main()
 
