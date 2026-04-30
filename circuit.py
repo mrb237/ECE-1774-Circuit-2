@@ -17,6 +17,7 @@ class Circuit:
         self.transmission_lines: Dict[str, TransmissionLine] = {}
         self.generators: Dict[str, Generator] = {}
         self.loads: Dict[str, Load] = {}
+        self.breakers = {}
         self.ybus = None
 
     @staticmethod
@@ -54,6 +55,11 @@ class Circuit:
         self.loads[name] = loadobj
         return loadobj
 
+    def add_breaker(self, name: str, element_type: str, element_name: str):
+        if name in self.breakers:
+            raise ValueError(f"Duplicate breaker {name}")
+        self.breakers[name] = Breaker(name, element_type, element_name)
+
     # Adding Methods
     def calc_ybus(self):
         # Stores amount of buses are in the dictionary
@@ -67,6 +73,9 @@ class Circuit:
 
         # Transformer
         for name, tf_v in self.transformers.items():
+            if any(b.element_type == "transformer" and b.element_type == name and not b.is_closed() for b in self.breakers().values()):
+                continue
+
             Yprim_tf = tf_v.calc_yprim()
             # print(Yprim_tf)
 
@@ -82,6 +91,9 @@ class Circuit:
 
         # Transmission_line
         for name, tl_v in self.transmission_lines.items():
+            if any(b.element_type == "line" and b.element_type == name and not b.is_closed() for b in self.breakers().values()):
+                continue
+
             Yprim_tl = tl_v.calc_yprim()
 
             b1 = tl_v.bus1_name
