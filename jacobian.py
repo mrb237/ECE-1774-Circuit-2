@@ -46,8 +46,7 @@ class Jacobian:
             if kbus.bus_type == "Slack":
                 continue
 
-            connected = any((t1.bus1_name == kbus.name or tl.bus2_name == kbus.name) for t1 in self.circuit.transmission_lines.values())
-
+            connected = any((tl.bus1_name == kbus.name or tl.bus2_name == kbus.name) for tl in self.circuit.transmission_lines.values())
             if not connected:
                 continue
 
