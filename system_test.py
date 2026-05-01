@@ -27,17 +27,17 @@ class SystemTest:
         c.add_bus("Bus5", 345.0, "PQ")
 
         # Transformers
-        c.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02, 9999.0)
-        c.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01, 9999.0)
+        c.add_transformer("T1", "Bus1", "Bus5", 0.0015, 0.02)
+        c.add_transformer("T2", "Bus3", "Bus4", 0.00075, 0.01)
 
         # Transmission lines
-        c.add_transmission_line("TL1", "Bus5", "Bus4", 0.00225, 0.025, 0.0, 0.44, 9999.0)
-        c.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88, 9999.0)
-        c.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72, 9999.0)
+        c.add_transmission_line("TL1", "Bus5", "Bus4", 0.00225, 0.025, 0.0, 0.44)
+        c.add_transmission_line("TL2", "Bus5", "Bus2", 0.0045, 0.05, 0.0, 0.88)
+        c.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
 
         # Generators
-        c.add_generator("G1", "Bus1", 1.00, 0.0)
-        c.add_generator("G2", "Bus3", 1.05, 520.0)
+        c.add_generator("G1", "Bus1", 1.00, 0.0, 0.0)
+        c.add_generator("G2", "Bus3", 1.05, 520.0, 0.0)
 
         # Loads
         c.add_load("L1", "Bus3", 80.0, 40.0)
