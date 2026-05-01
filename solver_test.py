@@ -36,8 +36,8 @@ class SolverTest:
         c.add_transmission_line("TL3", "Bus4", "Bus2", 0.009, 0.1, 0.0, 1.72)
 
         # Generators
-        c.add_generator("G1", "Bus1", 1.00, 0.0, 0.0)
-        c.add_generator("G2", "Bus3", 1.05, 520.0, 0.0)
+        c.add_generator("G1", "Bus1", 1.00, 0.0)
+        c.add_generator("G2", "Bus3", 1.05, 520.0)
 
         # Loads
         c.add_load("L1", "Bus3", 80.0, 40.0)

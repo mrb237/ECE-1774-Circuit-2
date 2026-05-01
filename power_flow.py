@@ -77,6 +77,25 @@ class PowerFlow:
 
             }
         }
+
+    def compute_power_flow_direction(circuit):
+        flows = {}
+
+        for name, line in circuit.transmission_lines.items():
+
+            blocked = any(
+                br.element_type == "line" and
+                br.element_name == name and
+                not br.is_closed()
+                for br in circuit.breakers.values()
+            )
+            if blocked:
+                continue
+
+            flows[name] = f"{line.bus1_name} → {line.bus2_name}"
+
+        return flows
+
     def solve_fault(self, fault_bus: str, vf: float = 1.0):
         # Step 1: build faulted Ybus and Zbus
         self.circuit.calc_ybus_fault()
