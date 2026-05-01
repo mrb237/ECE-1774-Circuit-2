@@ -169,28 +169,6 @@ class SolverTest:
         print("\nJacobian Matrix:")
         print(np.round(jacobian_matrix, decimals))
 
-    def print_power_flow_direction(self):
-        """
-        Print only type, from_bus, and to_bus / to for compact flow-direction checks.
-        """
-        self.refresh_objects()
-        flow_results_tl_tf, flow_results_g_l = self.power_flow.compute_power_flow_direction(SETTINGS)
-
-        print("\nPower Flow Direction Summary:")
-
-        for element_name, data in flow_results_tl_tf.items():
-            print(f"{element_name}:")
-            print(f"  Type:     {data['type']}")
-            print(f"  From Bus: {data['from_bus']}")
-            print(f"  To Bus:   {data['to_bus']}")
-
-        for element_name, data in flow_results_g_l.items():
-            print(f"{element_name}:")
-            print(f"  Type:     {data['type']}")
-            print(f"  From Bus: {data['from_bus']}")
-            # generators/loads use 'to' instead of 'to_bus'
-            print(f"  To Bus:   {data['to']}")
-
     def print_post_solve_diagnostics(self, title="Solved State Diagnostics"):
         """
         Centralized post-solve reporting so every test case prints the same diagnostics.
@@ -199,7 +177,6 @@ class SolverTest:
         self.print_current_bus_state(title)
         self.print_mismatch()
         self.print_jacobian()
-        self.print_power_flow_direction()
 
     # ---------------------------------------------------------
     # SAFE SOLVE

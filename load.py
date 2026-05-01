@@ -1,7 +1,15 @@
 from settings import SETTINGS
 
+LOAD_TYPES = {"PQ", "Z"}
+
 class Load:
-    def __init__(self, name:str, bus1_name:str, mw:float, mvar:float):
+    # Class-level hard collapse threshold
+    collapse_voltage = 0.25
+
+    def __init__(self, name: str, bus1_name: str, mw: float, mvar: float, rating: float = 1000.0, load_type: str = "PQ", min_voltage: float = 0.7):
+        if load_type not in LOAD_TYPES:
+            raise ValueError(f"Invalid load type '{load_type}'. Must be one of {LOAD_TYPES}")
+
         self.name = name
         self.bus1_name = bus1_name
         self.mw = mw
@@ -9,21 +17,43 @@ class Load:
         self.p = self.calc_p()
         self.q = self.calc_q()
 
+        self.load_type = load_type
+        self.min_voltage = min_voltage
+        self.rating = rating
 
     def calc_p(self):
-        p = self.mw/SETTINGS.sbase
-        return p
+        return self.mw / SETTINGS.sbase
 
     def calc_q(self):
-        q = self.mvar/SETTINGS.sbase
-        return q
+        return self.mvar / SETTINGS.sbase
 
-if __name__ == "__main__":
-    load1 = Load("Load1", "Bus2", 50.0, 30.0)
+    def update_type(self, vpu: float):
+        # Switch between PQ and Z based on voltage.
 
-    print(f"Load1 Name: {load1.name}")
-    print(f"Load1 Bus Name: {load1.bus1_name}")
-    print(f"Load1 Real Power: {load1.mw}")
-    print(f"Load1 Reactive Power: {load1.mvar}")
-    print(f"Load1 Real Power Per-Unit: {load1.p}")
-    print(f"Load1 Reactive Power Per-Unit: {load1.q}")
+        if vpu < self.min_voltage:
+            self.load_type = "Z"
+        else:
+            self.load_type = "PQ"
+
+    @classmethod
+    def set_collapse_voltage(cls, value: float):
+        cls.collapse_voltage = float(value)
+
+    def is_collapsed(self, vpu: float):
+        return vpu < Load.collapse_voltage
+
+    def get_power(self):
+
+        if self.load_type == "PQ":
+            return self.p, self.q
+
+        return 0.0, 0.0
+
+    def calc_yprim(self):
+        if self.load_type != "Z":
+            return 0.0 + 0.0j
+
+        vth2 = self.min_voltage ** 2
+        G = self.p / vth2
+        B = -self.q / vth2
+        return complex(G, B)

@@ -21,7 +21,7 @@ class PowerFlow:
         elif self.mode == "fault":
             return self.solve_fault(**kwargs)
 
-    def solve(self, tol, max_iter):
+    def solve(self, tol, max_iter, flat_start=True):
         self.circuit.calc_ybus()
         jacobian_obj = Jacobian(self.circuit)
         self.converged = False

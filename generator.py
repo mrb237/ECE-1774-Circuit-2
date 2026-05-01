@@ -1,7 +1,7 @@
 from settings import SETTINGS
 
 class Generator:
-    def __init__(self, name:str, bus1_name:str, voltage_setpoint:float, mw_setpoint:float, x_sub_reactance: float):
+    def __init__(self, name:str, bus1_name:str, voltage_setpoint:float, mw_setpoint:float, x_sub_reactance: float = 0.0):
         self.name = name
         self.bus1_name = bus1_name
         self.voltage_setpoint = voltage_setpoint
