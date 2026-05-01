@@ -42,8 +42,13 @@ class Jacobian:
 
         self.jacobian = np.zeros((self.size, self.size), dtype=float)
 
+        adj = self.circuit.adjacency_list()
+
         for kbus in self.ordered_buses:
             if kbus.bus_type == "Slack":
+                continue
+
+            if len(adj[kbus.bus_index]) == 0:
                 continue
 
             connected = any((tl.bus1_name == kbus.name or tl.bus2_name == kbus.name) for tl in self.circuit.transmission_lines.values())

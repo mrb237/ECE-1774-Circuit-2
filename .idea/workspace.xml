@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="solver_engine + led_manager + pi_solver_led_test integration">
-      <change beforePath="$PROJECT_DIR$/pi_solver_led_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pi_solver_led_test.py" afterDir="false" />
+    <list default="true" id="ea12c5a5-1468-497b-8823-5e7b840812c9" name="Changes" comment="Dynamic Breakers">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/breaker.py" beforeDir="false" afterPath="$PROJECT_DIR$/breaker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/circuit.py" beforeDir="false" afterPath="$PROJECT_DIR$/circuit.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,7 +24,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="Senior-Design" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -70,7 +72,7 @@
     &quot;Python.transmission_line.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Senior-Design&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Final-Project-Micheal&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -236,14 +238,7 @@
       <workItem from="1775850493648" duration="388000" />
       <workItem from="1776097825808" duration="1533000" />
       <workItem from="1776103055915" duration="2166000" />
-    </task>
-    <task id="LOCAL-00002" summary="Added gitignore file">
-      <option name="closed" value="true" />
-      <created>1770903648920</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1770903648920</updated>
+      <workItem from="1777588604273" duration="2303000" />
     </task>
     <task id="LOCAL-00003" summary="Added gitignore file">
       <option name="closed" value="true" />
@@ -629,7 +624,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776104863541</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <task id="LOCAL-00051" summary="Dynamic Breakers">
+      <option name="closed" value="true" />
+      <created>1777573707236</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1777573707282</updated>
+    </task>
+    <option name="localTasksCounter" value="52" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -662,7 +665,8 @@
     <MESSAGE value="Finalized Testing" />
     <MESSAGE value="Begin Main" />
     <MESSAGE value="solver_engine + led_manager + pi_solver_led_test integration" />
-    <option name="LAST_COMMIT_MESSAGE" value="solver_engine + led_manager + pi_solver_led_test integration" />
+    <MESSAGE value="Dynamic Breakers" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dynamic Breakers" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/ECE_1774_Circuit_2$circuit.coverage" NAME="circuit Coverage Results" MODIFIED="1774461308751" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

@@ -55,10 +55,75 @@ class Circuit:
         self.loads[name] = loadobj
         return loadobj
 
-    def add_breaker(self, name: str, element_type: str, element_name: str):
-        if name in self.breakers:
-            raise ValueError(f"Duplicate breaker {name}")
-        self.breakers[name] = Breaker(name, element_type, element_name)
+    def add_breaker(self, name, arg1, arg2=None, status=True):
+        if arg2 is None:
+            raise ValueError("Breaker requires two arguments")
+
+        # If arg1 is a known type → element-based
+        if arg1 in ["line", "transformer", "generator", "load"]:
+            br = Breaker(name, element_type=arg1, element_name=arg2, status=status)
+        else:
+            # Otherwise assume bus-based breaker
+            br = Breaker(name, bus1=arg1, bus2=arg2, status=status)
+
+        self.breakers[name] = br
+        return br
+
+    def adjacency_list(self):
+        adj = {bus: set() for bus in self.buses}
+
+        def is_open_between(b1, b2):
+            return any(
+                (br.bus1 == b1 and br.bus2 == b2) or
+                (br.bus1 == b2 and br.bus2 == b1)
+                for br in self.breakers.values()
+                if not br.is_closed()
+            )
+
+        # Lines
+        for line in self.transmission_lines.values():
+            if not is_open_between(line.bus1_name, line.bus2_name):
+                adj[line.bus1_name].add(line.bus2_name)
+                adj[line.bus2_name].add(line.bus1_name)
+
+        # Transformers
+        for tf in self.transformers.values():
+            if not is_open_between(tf.bus1_name, tf.bus2_name):
+                adj[tf.bus1_name].add(tf.bus2_name)
+                adj[tf.bus2_name].add(tf.bus1_name)
+
+        return adj
+
+    def update_generator(self):
+        active_generators = []
+
+        for gen in self.generators.values():
+            blocked = any(
+                br.element_type == "generator" and
+                br.element_name == gen.name and
+                not br.is_closed()
+                for br in self.breakers.values()
+            )
+            if not blocked:
+                active_generators.append(gen)
+
+        if not active_generators:
+            raise ValueError("No active generators in system!")
+
+        # Check if slack still exists
+        slack_exists = any(
+            self.buses[gen.bus1_name].bus_type == "Slack"
+            for gen in active_generators
+        )
+
+        # If slack is gone → reassign
+        if not slack_exists:
+            new_slack = active_generators[0]
+            for bus in self.buses.values():
+                if bus.bus_type == "Slack":
+                    bus.bus_type = "PQ"
+
+            self.buses[new_slack.bus1_name].bus_type = "Slack"
 
     # Adding Methods
     def calc_ybus(self):
@@ -73,7 +138,12 @@ class Circuit:
 
         # Transformer
         for name, tf_v in self.transformers.items():
-            if any(b.element_type == "transformer" and b.element_type == name and not b.is_closed() for b in self.breakers().values()):
+            if any(
+                    (br.element_type == "transformer" and br.element_name == name) or
+                    (br.bus1 == tf_v.bus1_name and br.bus2 == tf_v.bus2_name)
+                    for br in self.breakers.values()
+                    if not br.is_closed()
+            ):
                 continue
 
             Yprim_tf = tf_v.calc_yprim()
@@ -91,7 +161,12 @@ class Circuit:
 
         # Transmission_line
         for name, tl_v in self.transmission_lines.items():
-            if any(b.element_type == "line" and b.element_type == name and not b.is_closed() for b in self.breakers().values()):
+            if any(
+                    (br.element_type == "line" and br.element_name == name) or
+                    (br.bus1 == tl_v.bus1_name and br.bus2 == tl_v.bus2_name)
+                    for br in self.breakers.values()
+                    if not br.is_closed()
+            ):
                 continue
 
             Yprim_tl = tl_v.calc_yprim()
@@ -143,10 +218,12 @@ class Circuit:
         return P_i, Q_i
 
     def compute_power_mismatch(self):
-        power_mismatches = []
-        reactive_mismatches = []
+        self.update_generator()
+
+        mismatches = []
 
         for bus in self.buses.values():
+
             if bus.bus_type == "Slack":
                 continue
 
@@ -155,23 +232,39 @@ class Circuit:
             Pspec = 0.0
             Qspec = 0.0
 
+            # Generators
             for gen in self.generators.values():
+                if any(
+                        br.element_type == "generator" and
+                        br.element_name == gen.name and
+                        not br.is_closed()
+                        for br in self.breakers.values()
+                ):
+                    continue
+
                 if gen.bus1_name == bus.name:
                     Pspec += gen.p
 
+            # Loads
             for load in self.loads.values():
+                if any(
+                        br.element_type == "load" and
+                        br.element_name == load.name and
+                        not br.is_closed()
+                        for br in self.breakers.values()
+                ):
+                    continue
+
                 if load.bus1_name == bus.name:
                     Pspec -= load.p
                     Qspec -= load.q
-            if bus.bus_type == "PQ" or bus.bus_type == "PV":
-                delta_P = Pspec - Pcalc
-                power_mismatches.append(delta_P)
+
+            mismatches.append(Pspec - Pcalc)
 
             if bus.bus_type == "PQ":
-                delta_Q = Qspec - Qcalc
-                reactive_mismatches.append(delta_Q)
-            #test = np.array(power_mismatches + reactive_mismatches)
-        return np.array(power_mismatches + reactive_mismatches)
+                mismatches.append(Qspec - Qcalc)
+
+        return np.array(mismatches)
 
     def calc_ybus_fault(self):
         self.calc_ybus()
